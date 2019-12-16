@@ -38,6 +38,13 @@ $ git clone https://github.com/morihisa/WOWHoneypot.git wowhoneypot
 $ cd wowhoneypot
 $ python3 ./wowhoneypot.py
 ```
+## Systemd
+```
+sudo cp WOWHoneypot.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start WOWHoneypot
+sudo systemctl status WOWHoneypot
+```
 
 ## 動作確認
 - ブラウザでハニーポットの IP アドレスにアクセスして、何かしらの HTML ファイルが返ってきたら OK です。
