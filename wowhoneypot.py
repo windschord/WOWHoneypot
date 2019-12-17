@@ -4,36 +4,35 @@
 # author @morihi_soc
 # (c) 2017 @morihi_soc
 
+import base64
+from json import load
+from logging import config, getLogger
+import logging.handlers
 import os
+import random
+import re
+import select
+import socket
 import sys
 import traceback
-import threading
-import re
-import random
-import base64
-import binascii
-import logging
-import logging.handlers
-import socket
-import select
 import urllib.parse
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from mrr_checker import parse_mrr
 from datetime import datetime, timedelta, timezone
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
-WOWHONEYPOT_VERSION = "1.2"
+import logging_conf
+from CustomLogFilter import AccessLog
+from mrr_checker import parse_mrr
+
+WOWHONEYPOT_VERSION = "1.2.1"
 
 JST = timezone(timedelta(hours=+9), 'JST')
-logger = logging.getLogger('SyslogLogger')
-logger.setLevel(logging.INFO)
-syslog_enable = False
+logger = getLogger(__name__)
+
 hunt_enable = False
 ip = "0.0.0.0"
 port = 8000
 serverheader = "test"
 artpath = "./art/"
-accesslogfile = ""
-wowhoneypotlogfile = ""
 huntrulelogfile = ""
 hunt_rules = []
 default_content = []
@@ -44,6 +43,7 @@ blacklist = {}
 separator = " "
 ipmasking = False
 
+
 class WOWHoneypotHTTPServer(HTTPServer):
     def server_bind(self):
         HTTPServer.server_bind(self)
@@ -52,6 +52,7 @@ class WOWHoneypotHTTPServer(HTTPServer):
     def finish_request(self, request, client_address):
         request.settimeout(timeout)
         HTTPServer.finish_request(self, request, client_address)
+
 
 class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
     def send_response(self, code, message=None):
@@ -88,9 +89,9 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
             parse_request_flag = True
             if re.match("^[A-Z]", rrl) and (rrl.endswith("HTTP/1.0") or rrl.endswith("HTTP/1.1")):
                 rrlmethod = rrl[:rrl.index(" ")]
-                rrluri = rrl[rrl.index(" ")+1:rrl.rindex(" ")].replace(" ", "%20")
+                rrluri = rrl[rrl.index(" ") + 1:rrl.rindex(" ")].replace(" ", "%20")
                 rrluri = rrluri.replace("\"", "%22")
-                rrlversion = rrl[rrl.rindex(" ")+1:]
+                rrlversion = rrl[rrl.rindex(" ") + 1:]
                 rrl2 = rrlmethod + " " + rrluri + " " + rrlversion
                 self.raw_requestline = rrl2.encode()
             else:
@@ -154,7 +155,7 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Server", serverheader)
                 self.send_header('Content-Type', 'text/html')
-                r = default_content[random.randint(0, len(default_content)-1)]
+                r = default_content[random.randint(0, len(default_content) - 1)]
                 self.send_header('Content-Length', len(r))
                 self.end_headers()
                 self.wfile.write(bytes(r, "utf-8"))
@@ -195,24 +196,25 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                 hostname = "blank:80"
 
             request_all = self.requestline + "\n" + str(self.headers) + body
-            logging_access("[{time}]{s}{clientip}{s}{hostname}{s}\"{requestline}\"{s}{status_code}{s}{match_result}{s}{requestall}\n".format(
-                                                                    time=get_time(),
-                                                                    clientip=clientip,
-                                                                    hostname=hostname,
-                                                                    requestline=self.requestline,
-                                                                    status_code=status,
-                                                                    match_result=match,
-                                                                    requestall=base64.b64encode(request_all.encode('utf-8')).decode('utf-8'),
-                                                                    s=separator
-                                                                    ))
+            logging_access(
+                format_access_log(
+                    time=get_time(),
+                    client_ip=clientip,
+                    hostname=hostname,
+                    request_line=self.requestline,
+                    status_code=status,
+                    match_result=match,
+                    request_all=request_all,
+                    separator=separator
+                ))
             # Hunting
             if hunt_enable:
                 decoded_request_all = urllib.parse.unquote(request_all)
                 for hunt_rule in hunt_rules:
                     for hit in re.findall(hunt_rule, decoded_request_all):
-                        logging_hunt("[{time}] {clientip} {hit}\n".format(    time=get_time(),
-                                                                            clientip=clientip,
-                                                                            hit=hit))
+                        logging_hunt("[{time}] {clientip} {hit}\n".format(time=get_time(),
+                                                                          clientip=clientip,
+                                                                          hit=hit))
 
         except socket.timeout as e:
             emsg = "{0}".format(e)
@@ -238,47 +240,55 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                 blacklist[clientip] = 1
             return
 
+
+def format_access_log(time, client_ip, hostname, request_line, status_code, match_result, request_all, separator):
+    return "[{time}]{s}{clientip}{s}{hostname}{s}\"{requestline}\"{s}{status_code}{s}{match_result}{s}{requestall}".format(
+        time=time,
+        clientip=client_ip,
+        hostname=hostname,
+        requestline=request_line,
+        status_code=status_code,
+        match_result=match_result,
+        requestall=base64.b64encode(request_all.encode('utf-8')).decode('utf-8'),
+        s=separator
+    )
+
+
 def logging_access(log):
-    with open(accesslogfile, 'a') as f:
-        f.write(log)
-    if syslog_enable:
+    logger.log(AccessLog, log)
+
+    if is_active_syslog():
         logger.log(msg="{0} {1}".format(__file__, log), level=logging.INFO)
 
-def logging_system(message, is_error, is_exit):
-    if not is_error: #CYAN
-        print("\u001b[36m[INFO]{0}\u001b[0m".format(message))
-        file = open(wowhoneypotlogfile, "a")
-        file.write("[{0}][INFO]{1}\n".format(get_time(), message))
-        file.close()
 
-    else: #RED
-        print("\u001b[31m[ERROR]{0}\u001b[0m".format(message))
-        file = open(wowhoneypotlogfile, "a")
-        file.write("[{0}][ERROR]{1}\n".format(get_time(), message))
-        file.close()
+def logging_system(message, is_error, is_exit):
+    if not is_error:  # CYAN
+        logger.info(message)
+    else:  # RED
+        logger.error(message)
 
     if is_exit:
         sys.exit(1)
+
 
 # Hunt
 def logging_hunt(message):
     with open(huntrulelogfile, 'a') as f:
         f.write(message)
 
+
 def get_time():
     return "{0:%Y-%m-%d %H:%M:%S%z}".format(datetime.now(JST))
+
 
 def config_load():
     configfile = "./config.txt"
     if not os.path.exists(configfile):
-        print("\u001b[31m[ERROR]{0} dose not exist...\u001b[0m".format(configfile))
+        logger.error('%s dose not exist...', configfile)
         sys.exit(1)
     with open(configfile, 'r') as f:
         logpath = "./"
-        accesslogfile_name = "access_log"
-        wowhoneypotlogfile_name = "wowhoneypot.log"
         huntlog_name = "hunting.log"
-        syslogport = 514
 
         for line in f:
             if line.startswith("#") or line.find("=") == -1:
@@ -293,25 +303,11 @@ def config_load():
                 artpath = line.split('=')[1].strip()
             if line.startswith("logpath"):
                 logpath = line.split('=')[1].strip()
-            if line.startswith("accesslog"):
-                accesslogfile_name = line.split('=')[1].strip()
             if line.startswith("separator"):
                 global separator
                 separator = line.strip().split('=')[1].split('"')[1]
                 if len(separator) < 1:
                     separator = " "
-            if line.startswith("wowhoneypotlog"):
-                wowhoneypotlogfile_name = line.split('=')[1].strip()
-            if line.startswith("syslog_enable"):
-                global syslog_enable
-                if line.split('=')[1].strip() == "True":
-                    syslog_enable = True
-                else:
-                    syslog_enable = False
-            if line.startswith("syslogserver"):
-                syslogserver = line.split('=')[1].strip()
-            if line.startswith("syslogport"):
-                syslogport = line.split('=')[1].strip()
             if line.startswith("hunt_enable"):
                 global hunt_enable
                 if line.split('=')[1].strip() == "True":
@@ -327,18 +323,12 @@ def config_load():
                 else:
                     ipmasking = False
 
-        global accesslogfile
-        accesslogfile = os.path.join(logpath, accesslogfile_name)
-
-        global wowhoneypotlogfile
-        wowhoneypotlogfile = os.path.join(logpath, wowhoneypotlogfile_name)
-
         global huntrulelogfile
         huntrulelogfile = os.path.join(logpath, huntlog_name)
 
     # art directory Load
     if not os.path.exists(artpath) or not os.path.isdir(artpath):
-        logging_system("{0} directory load error.".format(arttpath), True, True)
+        logging_system("{0} directory load error.".format(artpath), True, True)
 
     defaultfile = os.path.join(artpath, "mrrules.xml")
     if not os.path.exists(defaultfile) or not os.path.isfile(defaultfile):
@@ -356,7 +346,6 @@ def config_load():
         logging_system("mrrules.xml reading complete.", False, False)
     else:
         logging_system("mrrules.xml reading error.", True, True)
-
 
     defaultlocal_file = os.path.join(artpath, "mrrules_local.xml")
     if os.path.exists(defaultlocal_file) and os.path.isfile(defaultlocal_file):
@@ -386,7 +375,6 @@ def config_load():
     if len(default_content) == 0:
         logging_system("default html content not exist.", True, True)
 
-
     # Hunting
     if hunt_enable:
         huntrulefile = os.path.join(artpath, "huntrules.txt")
@@ -399,34 +387,27 @@ def config_load():
                 if len(line) > 0:
                     hunt_rules.append(line)
 
-    # Syslog
-    if syslog_enable:
-        try:
-            sport = int(syslogport)
-        except ValueError:
-            logging_system("syslogport({0}) not valid.".format(syslogport), True, True)
-        try:
-            handler = logging.handlers.SysLogHandler(address=(syslogserver, int(sport)),
-                                                    facility=16, # facility 16: local0
-                                                    socktype=socket.SOCK_STREAM)
-            logger.addHandler(handler)
-        except TimeoutError:
-            logging_system("syslog tcp connection timed out. Wrong hostname/port? ({0}:{1})".format(syslogserver, sport), True, True)
+
+def is_active_syslog():
+    return logging.handlers.SysLogHandler in [type(a) for a in logging.getLogger().manager.root.handlers]
 
 
 if __name__ == '__main__':
     random.seed(datetime.now())
 
+    config.dictConfig(logging_conf.conf)
     try:
         config_load()
     except Exception:
         print(traceback.format_exc())
         sys.exit(1)
-    logging_system("WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, ip, port, get_time()), False, False)
+    logging_system("WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, ip, port, get_time()),
+                   False, False)
     logging_system("Hunting: {0}".format(hunt_enable), False, False)
     logging_system("IP Masking: {0}".format(ipmasking), False, False)
     myServer = WOWHoneypotHTTPServer((ip, port), WOWHoneypotRequestHandler)
     myServer.timeout = timeout
+
     try:
         myServer.serve_forever()
     except KeyboardInterrupt:
