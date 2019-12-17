@@ -23,19 +23,21 @@ conf = {
             'stream': 'ext://sys.stdout'
         },
         'logFileHandler': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'level': 'DEBUG',
             'formatter': 'logFileFormatter',
             'filename': './log/wowhoneypot.log',
-            'mode': 'a',
+            'when': 'MIDNIGHT',
+            'backupCount': 10,
             'encoding': 'utf-8'
         },
         'AccessLogFileHandler': {
-            'class': 'logging.FileHandler',
-            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level': 'INFO',
             'formatter': 'AccessLogFileFormatter',
             'filename': './log/access.log',
-            'mode': 'a',
+            'when': 'MIDNIGHT',
+            'backupCount': 10,
             'encoding': 'utf-8',
             'filters': [
                 'isAccessLog'
