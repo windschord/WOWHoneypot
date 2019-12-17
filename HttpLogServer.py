@@ -65,8 +65,8 @@ class PostHandler(BaseHTTPRequestHandler):
         # レスポンス開始
         self.send_response(200)
         self.end_headers()
-        client_ip = self.client_address[0]
-        print(client_ip)
+        pot_ip = self.client_address[0]
+        print(pot_ip)
         # フォームに POST されたデータを表示する
         if 'message' in form.keys():
             message = form['message'].value
@@ -78,6 +78,7 @@ class PostHandler(BaseHTTPRequestHandler):
                          'match_result', 'request_all']
 
         payload = dict(zip(message_label, message_ret.groups()))
+        payload['pot_ip'] = pot_ip
         print(payload)
         self.post_to_es(payload)
 
@@ -112,7 +113,7 @@ class CustomHTTPServer(HTTPServer):
 
 if __name__ == '__main__':
     server = CustomHTTPServer((SERVER_HOST, SERVER_PORT))
-    server.set_auth('demo', 'demo')
+    # server.set_auth('demo', 'demo')
     # server.socket = ssl.wrap_socket(server.socket,
     #                                keyfile=SERVER_KEY_FILE,
     #                                certfile=SERVER_CERT_FILE, server_side=True)
