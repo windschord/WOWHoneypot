@@ -12,6 +12,7 @@ conf = {
             'consoleHandler',
             'logFileHandler',
             'AccessLogFileHandler',
+            'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
         ]
     },
@@ -39,6 +40,19 @@ conf = {
             'when': 'MIDNIGHT',
             'backupCount': 10,
             'encoding': 'utf-8',
+            'filters': [
+                'isAccessLog'
+            ]
+        },
+        'AccessLogHttpHandler': {
+            'class': 'logging.handlers.HTTPHandler',
+            'level': 'INFO',
+            'formatter': 'AccessLogFileFormatter',
+            'host': '127.0.0.1:8888',
+            'url': '/',
+            'method': 'POST',
+            'secure': False,
+            'credentials': None,  # ('id', 'password')
             'filters': [
                 'isAccessLog'
             ]
