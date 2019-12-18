@@ -7,6 +7,7 @@ import ssl
 import struct
 import urllib
 import urllib.request
+from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import cgi
@@ -40,11 +41,13 @@ class SocketLogHandler(StreamRequestHandler):
             record = logging.makeLogRecord(obj)
             message = record.getMessage()
             print(message)
-            message_ret = re.match('\[(.+)\] (.+) (.+) \"(.+) (.+) (.+)\" (\d+) (.+) (.+)$', message)
+            message_ret = list(re.match('\[(.+)\] (.+) (.+) \"(.+) (.+) (.+)\" (\d+) (.+) (.+)$', message).groups())
+            message_ret[0] = datetime.strptime(message_ret[0], "%Y-%m-%d %H:%M:%S%z"
+                                               ).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             message_label = ['@timestamp', 'client_ip', 'hostname', 'method', 'path', 'version', 'status_code',
                              'match_result', 'request_all']
 
-            payload = dict(zip(message_label, message_ret.groups()))
+            payload = dict(zip(message_label, message_ret))
             payload['pot_ip'] = self.client_address[0]
             print(payload)
             self.post_to_es(payload)
