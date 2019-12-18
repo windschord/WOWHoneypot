@@ -11,6 +11,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import cgi
 from urllib.parse import urlparse
 
+from utils import EshHelper, RequestParser
+
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 SERVER_KEY_FILE = 'cert/server.key'
@@ -73,31 +75,10 @@ class PostHandler(BaseHTTPRequestHandler):
             message = form['message'].value
         if not message and 'msg' in form.keys():
             message = form['msg'].value
-        print(message)
-        message_ret = list(re.match('\[(.+)\] (.+) (.+) \"(.+) (.+) (.+)\" (\d+) (.+) (.+)$', message).groups())
-        message_ret[0] = datetime.strptime(message_ret[0], "%Y-%m-%d %H:%M:%S%z"
-                                               ).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        message_label = ['@timestamp', 'client_ip', 'hostname', 'method', 'path', 'version', 'status_code',
-                         'match_result', 'request_all']
 
-        payload = dict(zip(message_label, message_ret))
+        payload = RequestParser().http(message)
         payload['pot_ip'] = pot_ip
-        print(payload)
-        self.post_to_es(payload)
-
-    def post_to_es(self, payload):
-        json_data = json.dumps(payload).encode("utf-8")
-        invoke_url = "http://{host}:{port}/{index}/{type}".format(host=ES_HOST, port=ES_PORT,
-                                                                  index=ES_INDEX, type=ES_TYPE)
-
-        req = urllib.request.Request(invoke_url, data=json_data, method="POST",
-                                     headers={'Content-type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req) as response:
-                the_page = response.read().decode("utf-8")
-                print('res body: {}'.format(the_page))
-        except Exception as e:
-            print(e)
+        EshHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
 
 
 class CustomHTTPServer(HTTPServer):
