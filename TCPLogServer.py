@@ -1,19 +1,8 @@
 # -*- coding: utf-8 -*-
-import base64
-import json
-import logging
-import re
-import ssl
-import struct
-import urllib
-import urllib.request
-from datetime import datetime, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
-import cgi
-from socketserver import StreamRequestHandler, ThreadingTCPServer
-from urllib.parse import urlparse
 import _pickle as cPickle
+import logging
+import struct
+from socketserver import StreamRequestHandler, ThreadingTCPServer
 
 from utils import RequestParser, EshHelper
 

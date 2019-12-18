@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
-import re
-import ssl
-import urllib
-import urllib.request
-from datetime import datetime, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
 import cgi
-from urllib.parse import urlparse
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from utils import EshHelper, RequestParser
 
