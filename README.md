@@ -41,9 +41,18 @@ $ python3 ./wowhoneypot.py
 ## Systemd
 ```
 sudo cp WOWHoneypot.service /etc/systemd/system/
+sudo cp WOWHoneypotTcpLog.service /etc/systemd/system/
+
 sudo systemctl daemon-reload
+
 sudo systemctl start WOWHoneypot
+sudo systemctl start WOWHoneypotTcpLog
+
 sudo systemctl status WOWHoneypot
+sudo systemctl status WOWHoneypotTcpLog
+
+sudo systemctl enable WOWHoneypot
+sudo systemctl enable WOWHoneypotTcpLog
 ```
 
 ## 動作確認
