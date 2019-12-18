@@ -60,6 +60,13 @@ sudo systemctl status WOWHoneypot
 curl -XPUT 'localhost:9200/wowhoneypot'
 ```
 
+## GeoIPの使用
+下記のURLからデータベースファイル（GeoLite2-City.mmdb）をダウンロードする。
+
+https://dev.maxmind.com/geoip/geoip2/geolite2/
+
+config.txtの`geoipdbpath`￿に`GeoLite2-City.mmdb`のパスを設定する。
+
 ## ハンティング機能(WOWHoneypot 1.1 で追加)
 - ハンティング機能は、あらかじめ指定しておいた文字列が、要求内容に含まれていた場合に、その文字列をログとして保存します。
 - 使い方の例として、wget のようなファイルをダウンロードするコマンドに続いて URL が指定されている文字列を抽出することができます。
