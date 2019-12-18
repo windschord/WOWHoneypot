@@ -11,7 +11,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import cgi
 from urllib.parse import urlparse
 
-SERVER_HOST = 'localhost'
+SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 SERVER_KEY_FILE = 'cert/server.key'
 SERVER_CERT_FILE = 'cert/server.crt'

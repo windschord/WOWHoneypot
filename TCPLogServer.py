@@ -15,7 +15,7 @@ from socketserver import StreamRequestHandler, ThreadingTCPServer
 from urllib.parse import urlparse
 import _pickle as cPickle
 
-SERVER_HOST = 'localhost'
+SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 ES_HOST = 'localhost'
 ES_PORT = 9200
