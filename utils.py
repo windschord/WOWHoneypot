@@ -2,7 +2,10 @@
 import json
 import re
 import urllib
+import urllib.request
 from datetime import datetime, timezone
+
+import geoip2.database
 
 
 class RequestParser(object):
@@ -23,6 +26,23 @@ class RequestParser(object):
         return payload
 
 
+class GeoIpHelper(object):
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def get(self, ip_address):
+        with geoip2.database.Reader(self.db_path) as reader:
+            response = reader.city(ip_address)
+            return {
+                'country': response.country.name,
+                'city': response.city.name,
+                'location': {
+                    'lat': response.location.latitude,
+                    'lon': response.location.longitude
+                }
+            }
+
+
 class EshHelper(object):
     def __init__(self, es_host, es_port, es_index, es_type):
         self.es_host = es_host
@@ -38,7 +58,7 @@ class EshHelper(object):
         req = urllib.request.Request(invoke_url, data=json_data, method="POST",
                                      headers={'Content-type': 'application/json'})
 
-        print('URL: {} DATA: {}'.format((invoke_url, json_data)))
+        print('URL: {} DATA: {}'.format(invoke_url, json_data))
 
         with urllib.request.urlopen(req) as response:
             the_page = response.read().decode("utf-8")

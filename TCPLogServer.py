@@ -4,14 +4,16 @@ import logging
 import struct
 from socketserver import StreamRequestHandler, ThreadingTCPServer
 
-from utils import RequestParser, EshHelper
+from utils import RequestParser, EshHelper, GeoIpHelper
 
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 ES_HOST = 'localhost'
 ES_PORT = 9200
-ES_INDEX = 'wowhoneypot'
-ES_TYPE = 'wowhoneypot'
+ES_INDEX = 'wowhoneypot3'
+ES_TYPE = 'wowhoneypot3'
+# if enable GeoIP, set path to GeoLite2-City.mmdb
+GEOIP_PATH = 'GeoLite2-City.mmdb'
 
 
 class SocketLogHandler(StreamRequestHandler):
@@ -34,6 +36,12 @@ class SocketLogHandler(StreamRequestHandler):
 
             payload = RequestParser().tcp(message)
             payload['pot_ip'] = self.client_address[0]
+
+            if GEOIP_PATH:
+                try:
+                    payload['client_geoip'] = GeoIpHelper(GEOIP_PATH).get(payload['client_ip'])
+                except Exception as e:
+                    print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
             EshHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
         self.request.close()
 
