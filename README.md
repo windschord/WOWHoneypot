@@ -76,6 +76,8 @@ https://dev.maxmind.com/geoip/geoip2/geolite2/
 
 config.txtの`geoipdbpath`￿に`GeoLite2-City.mmdb`のパスを設定する。
 
+pip3 install geoip2
+
 ## ハンティング機能(WOWHoneypot 1.1 で追加)
 - ハンティング機能は、あらかじめ指定しておいた文字列が、要求内容に含まれていた場合に、その文字列をログとして保存します。
 - 使い方の例として、wget のようなファイルをダウンロードするコマンドに続いて URL が指定されている文字列を抽出することができます。
@@ -84,7 +86,7 @@ config.txtの`geoipdbpath`￿に`GeoLite2-City.mmdb`のパスを設定する。
 - 抽出したログは、log ディレクトリの hunting.log に保存されます(\[日時\] 送信元IP 一致した文字列)。  
 ---
 - hunting.log ファイルから、URL を抽出して VirusTotal へサブミットするサンプルスクリプト(chase-url.py)を公開しました。
-- chase-url.py を利用する場合、requests ライブラリが必要です($ pip install requests)。
+- chase-url.py を利用する場合、requests ライブラリが必要です($ pip3 install requests)。
 - 実行前に、VirusTotal API Key を取得して、chase-url.py に記載してください。
 - 1日や1時間に1回程度実行するといいと思います。ただし VirusTotal API の上限に引っかからないように注意してください。
 - サブミットするファイルは、**メモリへキャッシュとして保存しますが、ディスクには保存しません。**
