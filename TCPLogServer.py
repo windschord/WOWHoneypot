@@ -10,8 +10,8 @@ SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 ES_HOST = 'localhost'
 ES_PORT = 9200
-ES_INDEX = 'wowhoneypot3'
-ES_TYPE = 'wowhoneypot3'
+ES_INDEX = 'wowhoneypot'
+ES_TYPE = 'wowhoneypot'
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 GEOIP_PATH = 'GeoLite2-City.mmdb'
 
