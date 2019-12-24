@@ -4,6 +4,9 @@ conf = {
     'filters': {
         'isAccessLog': {
             '()': 'CustomLogFilter.AccessLogFilter'
+        },
+        'isHuntLog': {
+            '()': 'CustomLogFilter.HuntLogFilter'
         }
     },
     'root': {
@@ -15,6 +18,8 @@ conf = {
             'AccessLogTCPHandler',
             # 'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
+            'HuntLogFileHandler',
+            'HuntLogTCPHandler',
         ]
     },
     'handlers': {
@@ -76,6 +81,29 @@ conf = {
         #         'isAccessLog'
         #     ]
         # },
+        'HuntLogFileHandler': {
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level': 'INFO',
+            'formatter': 'HuntLogFileFormatter',
+            'filename': './log/hunting.log',
+            'when': 'MIDNIGHT',
+            'backupCount': 10,
+            'encoding': 'utf-8',
+            'filters': [
+                'isHuntLog'
+            ]
+        },
+        'HuntLogTCPHandler': {
+            'class': 'logging.handlers.SocketHandler',
+            'level': 'INFO',
+            'formatter': 'HuntLogFileFormatter',
+            'host': '127.0.0.1',
+            'port': '8888',
+            'filters': [
+                'isHuntLog'
+            ]
+        },
+
     },
     'formatters': {
         'consoleFormatter': {
@@ -88,6 +116,10 @@ conf = {
         },
         'AccessLogFileFormatter': {
             'format': '%(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S%z'
+        },
+        'HuntLogFileFormatter': {
+            'format': '[%(asctime)s] %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S%z'
         },
     }

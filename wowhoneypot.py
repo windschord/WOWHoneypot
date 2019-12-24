@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import logging_conf
-from CustomLogFilter import AccessLog
+from CustomLogFilter import AccessLog, HuntLog
 from mrr_checker import parse_mrr
 
 WOWHONEYPOT_VERSION = "1.2.1"
@@ -33,7 +33,6 @@ ip = "0.0.0.0"
 port = 8000
 serverheader = "test"
 artpath = "./art/"
-huntrulelogfile = ""
 hunt_rules = []
 default_content = []
 mrrdata = {}
@@ -212,9 +211,7 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                 decoded_request_all = urllib.parse.unquote(request_all)
                 for hunt_rule in hunt_rules:
                     for hit in re.findall(hunt_rule, decoded_request_all):
-                        logging_hunt("[{time}] {clientip} {hit}\n".format(time=get_time(),
-                                                                          clientip=clientip,
-                                                                          hit=hit))
+                        logging_hunt("{clientip} {hit}".format(clientip=clientip, hit=hit))
 
         except socket.timeout as e:
             emsg = "{0}".format(e)
@@ -273,8 +270,7 @@ def logging_system(message, is_error, is_exit):
 
 # Hunt
 def logging_hunt(message):
-    with open(huntrulelogfile, 'a') as f:
-        f.write(message)
+    logger.log(HuntLog, message)
 
 
 def get_time():
@@ -287,9 +283,6 @@ def config_load():
         logger.error('%s dose not exist...', configfile)
         sys.exit(1)
     with open(configfile, 'r') as f:
-        logpath = "./"
-        huntlog_name = "hunting.log"
-
         for line in f:
             if line.startswith("#") or line.find("=") == -1:
                 continue
@@ -301,8 +294,6 @@ def config_load():
                 port = int(line.split('=')[1].strip())
             if line.startswith("artpath"):
                 artpath = line.split('=')[1].strip()
-            if line.startswith("logpath"):
-                logpath = line.split('=')[1].strip()
             if line.startswith("separator"):
                 global separator
                 separator = line.strip().split('=')[1].split('"')[1]
@@ -314,17 +305,12 @@ def config_load():
                     hunt_enable = True
                 else:
                     hunt_enable = False
-            if line.startswith("huntlog"):
-                huntlog_name = line.split('=')[1].strip()
             if line.startswith("ipmasking"):
                 global ipmasking
                 if line.split('=')[1].strip() == "True":
                     ipmasking = True
                 else:
                     ipmasking = False
-
-        global huntrulelogfile
-        huntrulelogfile = os.path.join(logpath, huntlog_name)
 
     # art directory Load
     if not os.path.exists(artpath) or not os.path.isdir(artpath):

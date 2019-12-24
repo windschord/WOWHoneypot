@@ -1,5 +1,5 @@
 # default port: 8080
-port=8081
+port=8080
 
 # default server header: Apache
 serverheader=Apache
@@ -7,15 +7,11 @@ serverheader=Apache
 # art directory path
 artpath=./art/
 
-# WOWHoneypot logfile path
-logpath=./log/
-
 # Access log separator
 separator=" "
 
 # Hunting
-hunt_enable=False
-huntlog=hunting.log
+hunt_enable=True
 
 # for GDPR(True: replace source ip address with 0.0.0.0)
 ipmasking=False
