@@ -19,7 +19,6 @@ conf = {
             # 'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
             'HuntLogFileHandler',
-            'HuntLogTCPHandler',
         ]
     },
     'handlers': {
@@ -93,17 +92,6 @@ conf = {
                 'isHuntLog'
             ]
         },
-        'HuntLogTCPHandler': {
-            'class': 'logging.handlers.SocketHandler',
-            'level': 'INFO',
-            'formatter': 'HuntLogFileFormatter',
-            'host': '127.0.0.1',
-            'port': '8888',
-            'filters': [
-                'isHuntLog'
-            ]
-        },
-
     },
     'formatters': {
         'consoleFormatter': {
