@@ -6,6 +6,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 import geoip2.database
+import requests
 
 
 class RequestParser(object):
@@ -63,3 +64,19 @@ class EshHelper(object):
         with urllib.request.urlopen(req) as response:
             the_page = response.read().decode("utf-8")
             print('res body: {}'.format(the_page))
+
+
+class SlackWebHookNotify(object):
+    def __init(self, url):
+        self.url = url
+
+    def send(self, message):
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        r = requests.post(url=self.url, headers=headers, data=json.dumps(message))
+
+        print('send to {}'.format(self.url))
+
+        r.raise_for_status()
