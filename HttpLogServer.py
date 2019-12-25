@@ -6,8 +6,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from utils import EshHelper, RequestParser
 
-from utils import EshHelper, RequestParser
-
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 SERVER_KEY_FILE = 'cert/server.key'
