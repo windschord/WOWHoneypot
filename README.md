@@ -5,7 +5,7 @@ Welcome to Omotenashi Web Honeypot(WOWHoneypot)は、簡単に構築可能で、
 
 送信元からの HTTP リクエストをそのまま保存するので、後からじっくりゆっくりログ分析をすることが可能です。
 
-ハニーポッター技術交流会で発表したときの資料はこちらで公開しています。  
+ハニーポッター技術交流会で発表したときの資料はこちらで公開しています。
 [初心者向けハニーポット WOWHoneypot の紹介](https://speakerdeck.com/morihi_soc/chu-xin-zhe-xiang-kehanihotuto-wowhoneypot-falseshao-jie)
 
 ## 特徴
@@ -17,7 +17,32 @@ Welcome to Omotenashi Web Honeypot(WOWHoneypot)は、簡単に構築可能で、
 ## 必要なもの
 - Python3
 
-## 構築方法(Ubuntu 16.04 Server 64bit)
+## 構築方法1 (Docker)
+```
+$ sudo ufw default DENY
+$ sudo ufw allow 80/tcp
+$ sudo ufw allow 8080/tcp
+※ SSH のアクセスポートも環境に合わせて追加してください。
+$ sudo ufw enable
+$ sudo vi /etc/ufw/before.rules
+※ 「*filter」より前に下記の4行を追記する。
+———————————————————————————
+*nat
+:PREROUTING ACCEPT [0:0]
+-A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+COMMIT
+———————————————————————————
+$ sudo ufw reload
+
+$ docker run -p 8080:8080 windschord/wowhoneypot wowhoneypot.py
+```
+
+※TCPサーバ経由でelastic searchにログを転送する場合は以下を受信先サーバで起動する。
+```
+$ docker run -p 8888:8888 windschord/wowhoneypot TCPLogServer.py
+```
+
+## 構築方法2 (Ubuntu 16.04 Server 64bit)
 ```
 $ sudo ufw default DENY
 $ sudo ufw allow 80/tcp
@@ -38,7 +63,7 @@ $ git clone https://github.com/morihisa/WOWHoneypot.git wowhoneypot
 $ cd wowhoneypot
 $ python3 ./wowhoneypot.py
 ```
-## Systemd
+### Systemd
 ```
 sudo cp WOWHoneypot.service /etc/systemd/system/
 sudo cp WOWHoneypotTcpLog.service /etc/systemd/system/
@@ -83,7 +108,7 @@ pip3 install geoip2
 - 使い方の例として、wget のようなファイルをダウンロードするコマンドに続いて URL が指定されている文字列を抽出することができます。
 - デフォルト設定では無効化されています。利用する場合は、config.txt の「hunt_enable」をTrueに変更してください。
 - 抽出する文字列は、art ディレクトリの huntrules.txt ファイルに1行につき1つ指定してください(正規表現で指定可能)。
-- 抽出したログは、log ディレクトリの hunting.log に保存されます(\[日時\] 送信元IP 一致した文字列)。  
+- 抽出したログは、log ディレクトリの hunting.log に保存されます(\[日時\] 送信元IP 一致した文字列)。
 ---
 - hunting.log ファイルから、URL を抽出して VirusTotal へサブミットするサンプルスクリプト(chase-url.py)を公開しました。
 - chase-url.py を利用する場合、requests ライブラリが必要です($ pip3 install requests)。
