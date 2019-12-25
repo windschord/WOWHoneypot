@@ -12,9 +12,4 @@ jobs:
     - uses: actions/checkout@v1
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag windschord/wowhoneypot:$(date +%s)
-    - name: Publish Docker
-      uses: elgohr/Publish-Docker-Github-Action@2.11
-      with:
-        name: windschord/wowhoneypot
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+
