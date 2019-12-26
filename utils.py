@@ -43,7 +43,7 @@ class GeoIpHelper(object):
             }
 
 
-class EshHelper(object):
+class EsHelper(object):
     def __init__(self, es_host, es_port, es_index, es_type):
         self.es_host = es_host
         self.es_port = es_port

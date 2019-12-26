@@ -4,7 +4,7 @@ import cgi
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from utils import EshHelper, RequestParser
+from utils import EsHelper, RequestParser
 
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
@@ -72,7 +72,7 @@ class PostHandler(BaseHTTPRequestHandler):
 
         payload = RequestParser().http(message)
         payload['pot_ip'] = pot_ip
-        EshHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
+        EsHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
 
 
 class CustomHTTPServer(HTTPServer):

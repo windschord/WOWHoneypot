@@ -4,7 +4,7 @@ import logging
 import struct
 from socketserver import StreamRequestHandler, ThreadingTCPServer
 
-from utils import RequestParser, EshHelper, GeoIpHelper
+from utils import RequestParser, EsHelper, GeoIpHelper
 
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
@@ -42,7 +42,7 @@ class SocketLogHandler(StreamRequestHandler):
                     payload['client_geoip'] = GeoIpHelper(GEOIP_PATH).get(payload['client_ip'])
                 except Exception as e:
                     print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
-            EshHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
+            EsHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
         self.request.close()
 
 
