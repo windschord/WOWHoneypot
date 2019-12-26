@@ -5,7 +5,6 @@
 # (c) 2017 @morihi_soc
 
 import base64
-from json import load
 from logging import config, getLogger
 import logging.handlers
 import os
@@ -21,6 +20,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import logging_conf
 from CustomLogFilter import AccessLog, HuntLog
+from config import *
 from mrr_checker import parse_mrr
 
 WOWHONEYPOT_VERSION = "1.2.1"
@@ -28,19 +28,15 @@ WOWHONEYPOT_VERSION = "1.2.1"
 JST = timezone(timedelta(hours=+9), 'JST')
 logger = getLogger(__name__)
 
-hunt_enable = False
-ip = "0.0.0.0"
-port = 8000
-serverheader = "test"
-artpath = "./art/"
+
+
 hunt_rules = []
 default_content = []
 mrrdata = {}
 mrrids = []
 timeout = 3.0
 blacklist = {}
-separator = " "
-ipmasking = False
+
 
 
 class WOWHoneypotHTTPServer(HTTPServer):
@@ -62,12 +58,12 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
         self.error_content_type = "text/plain"
 
     def handle_one_request(self):
-        if ipmasking == True:
+        if WOWHONEYPOT_IPMASKING == True:
             clientip = "0.0.0.0"
         else:
             clientip = self.client_address[0]
 
-        if not ipmasking and clientip in blacklist and blacklist[clientip] > 3:
+        if not WOWHONEYPOT_IPMASKING and clientip in blacklist and blacklist[clientip] > 3:
             logging_system("Access from blacklist ip({0}). denied.".format(clientip), True, False)
             self.close_connection = True
             return
@@ -152,7 +148,7 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
 
             if not match:
                 self.send_response(200)
-                self.send_header("Server", serverheader)
+                self.send_header("Server", WOWHONEYPOT_SERVER_HEADER)
                 self.send_header('Content-Type', 'text/html')
                 r = default_content[random.randint(0, len(default_content) - 1)]
                 self.send_header('Content-Length', len(r))
@@ -171,7 +167,7 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                         header_content_type_flag = True
 
                 if not header_server_flag:
-                    self.send_header('Server', serverheader)
+                    self.send_header('Server', WOWHONEYPOT_SERVER_HEADER)
                 if not header_content_type_flag:
                     self.send_header('Content-Type', 'text/html')
                 r = mrrdata[match]["response"]["body"]
@@ -204,10 +200,10 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
                     status_code=status,
                     match_result=match,
                     request_all=request_all,
-                    separator=separator
+                    separator=WOWHONEYPOT_LOG_SEPARATOR
                 ))
             # Hunting
-            if hunt_enable:
+            if WOWHONEYPOT_HUNT_ENABLE:
                 decoded_request_all = urllib.parse.unquote(request_all)
                 for hunt_rule in hunt_rules:
                     for hit in re.findall(hunt_rule, decoded_request_all):
@@ -278,45 +274,11 @@ def get_time():
 
 
 def config_load():
-    configfile = "./config.txt"
-    if not os.path.exists(configfile):
-        logger.error('%s dose not exist...', configfile)
-        sys.exit(1)
-    with open(configfile, 'r') as f:
-        for line in f:
-            if line.startswith("#") or line.find("=") == -1:
-                continue
-            if line.startswith("serverheader"):
-                global serverheader
-                serverheader = line.split('=')[1].strip()
-            if line.startswith("port"):
-                global port
-                port = int(line.split('=')[1].strip())
-            if line.startswith("artpath"):
-                artpath = line.split('=')[1].strip()
-            if line.startswith("separator"):
-                global separator
-                separator = line.strip().split('=')[1].split('"')[1]
-                if len(separator) < 1:
-                    separator = " "
-            if line.startswith("hunt_enable"):
-                global hunt_enable
-                if line.split('=')[1].strip() == "True":
-                    hunt_enable = True
-                else:
-                    hunt_enable = False
-            if line.startswith("ipmasking"):
-                global ipmasking
-                if line.split('=')[1].strip() == "True":
-                    ipmasking = True
-                else:
-                    ipmasking = False
-
     # art directory Load
-    if not os.path.exists(artpath) or not os.path.isdir(artpath):
-        logging_system("{0} directory load error.".format(artpath), True, True)
+    if not os.path.exists(WOWHONEYPOT_ART_PATH) or not os.path.isdir(WOWHONEYPOT_ART_PATH):
+        logging_system("{0} directory load error.".format(WOWHONEYPOT_ART_PATH), True, True)
 
-    defaultfile = os.path.join(artpath, "mrrules.xml")
+    defaultfile = os.path.join(WOWHONEYPOT_ART_PATH, "mrrules.xml")
     if not os.path.exists(defaultfile) or not os.path.isfile(defaultfile):
         logging_system("{0} file load error.".format(defaultfile), True, True)
 
@@ -333,7 +295,7 @@ def config_load():
     else:
         logging_system("mrrules.xml reading error.", True, True)
 
-    defaultlocal_file = os.path.join(artpath, "mrrules_local.xml")
+    defaultlocal_file = os.path.join(WOWHONEYPOT_ART_PATH, "mrrules_local.xml")
     if os.path.exists(defaultlocal_file) and os.path.isfile(defaultlocal_file):
         logging_system("mrrules_local.xml reading start.", False, False)
         mrrdata2 = parse_mrr(defaultlocal_file, os.path.split(defaultfile)[0])
@@ -346,7 +308,7 @@ def config_load():
         mrrdata.update(mrrdata2)
         mrrids = sorted(list(mrrdata.keys()), reverse=True)
 
-    artdefaultpath = os.path.join(artpath, "default")
+    artdefaultpath = os.path.join(WOWHONEYPOT_ART_PATH, "default")
     if not os.path.exists(artdefaultpath) or not os.path.isdir(artdefaultpath):
         logging_system("{0} directory load error.".format(artdefaultpath), True, True)
 
@@ -362,8 +324,8 @@ def config_load():
         logging_system("default html content not exist.", True, True)
 
     # Hunting
-    if hunt_enable:
-        huntrulefile = os.path.join(artpath, "huntrules.txt")
+    if WOWHONEYPOT_HUNT_ENABLE:
+        huntrulefile = os.path.join(WOWHONEYPOT_ART_PATH, "huntrules.txt")
         if not os.path.exists(huntrulefile) or not os.path.isfile(huntrulefile):
             logging_system("{0} file load error.".format(huntrulefile), True, True)
 
@@ -387,11 +349,11 @@ if __name__ == '__main__':
     except Exception:
         print(traceback.format_exc())
         sys.exit(1)
-    logging_system("WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, ip, port, get_time()),
+    logging_system("WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, WOWHONEYPOT_HOST, WOWHONEYPOT_PORT, get_time()),
                    False, False)
-    logging_system("Hunting: {0}".format(hunt_enable), False, False)
-    logging_system("IP Masking: {0}".format(ipmasking), False, False)
-    myServer = WOWHoneypotHTTPServer((ip, port), WOWHoneypotRequestHandler)
+    logging_system("Hunting: {0}".format(WOWHONEYPOT_HUNT_ENABLE), False, False)
+    logging_system("IP Masking: {0}".format(WOWHONEYPOT_IPMASKING), False, False)
+    myServer = WOWHoneypotHTTPServer((WOWHONEYPOT_HOST, WOWHONEYPOT_PORT), WOWHoneypotRequestHandler)
     myServer.timeout = timeout
 
     try:
