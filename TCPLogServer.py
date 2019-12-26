@@ -10,8 +10,7 @@ SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 ES_HOST = 'localhost'
 ES_PORT = 9200
-ES_INDEX = 'wowhoneypot'
-ES_TYPE = 'wowhoneypot'
+ES_INDEX = 'wowhoneypot3'
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 GEOIP_PATH = 'GeoLite2-City.mmdb'
 
@@ -19,7 +18,7 @@ GEOIP_PATH = 'GeoLite2-City.mmdb'
 class SocketLogHandler(StreamRequestHandler):
     def handle(self):
         print("connect from:", self.client_address)
-        alldata = ""
+
         while True:
             chunk = self.request.recv(4)
             if len(chunk) < 4:
@@ -42,7 +41,7 @@ class SocketLogHandler(StreamRequestHandler):
                     payload['client_geoip'] = GeoIpHelper(GEOIP_PATH).get(payload['client_ip'])
                 except Exception as e:
                     print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
-            EsHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
+            EsHelper(ES_HOST, ES_PORT, ES_INDEX).send(payload)
         self.request.close()
 
 

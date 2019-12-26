@@ -13,7 +13,7 @@ SERVER_CERT_FILE = 'cert/server.crt'
 ES_HOST = 'localhost'
 ES_PORT = 9200
 ES_INDEX = 'wowhoneypot'
-ES_TYPE = 'wowhoneypot'
+
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 GEOIP_PATH = None  # 'GeoLite2-City.mmdb'
 
@@ -72,7 +72,7 @@ class PostHandler(BaseHTTPRequestHandler):
 
         payload = RequestParser().http(message)
         payload['pot_ip'] = pot_ip
-        EsHelper(ES_HOST, ES_PORT, ES_INDEX, ES_TYPE).send(payload)
+        EsHelper(ES_HOST, ES_PORT, ES_INDEX).send(payload)
 
 
 class CustomHTTPServer(HTTPServer):

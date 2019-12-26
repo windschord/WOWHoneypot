@@ -44,7 +44,7 @@ class GeoIpHelper(object):
 
 
 class EsHelper(object):
-    def __init__(self, es_host, es_port, es_index, es_type):
+    def __init__(self, es_host, es_port, es_index, es_type='_doc'):
         self.es_host = es_host
         self.es_port = es_port
         self.es_index = es_index
