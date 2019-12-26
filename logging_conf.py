@@ -15,8 +15,8 @@ conf = {
             'consoleHandler',
             'logFileHandler',
             'AccessLogFileHandler',
-            'AccessLogTCPHandler',
-            # 'AccessLogHttpHandler',
+            # 'AccessLogTCPHandler',
+            'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
             'HuntLogFileHandler',
         ]
@@ -49,29 +49,29 @@ conf = {
                 'isAccessLog'
             ]
         },
-        'AccessLogTCPHandler': {
-            'class': 'logging.handlers.SocketHandler',
-            'level': 'INFO',
-            'formatter': 'AccessLogFileFormatter',
-            'host': '127.0.0.1',
-            'port': '8888',
-            'filters': [
-                'isAccessLog'
-            ]
-        },
-        # 'AccessLogHttpHandler': {
-        #     'class': 'logging.handlers.HTTPHandler',
+        # 'AccessLogTCPHandler': {
+        #     'class': 'logging.handlers.SocketHandler',
         #     'level': 'INFO',
         #     'formatter': 'AccessLogFileFormatter',
-        #     'host': '127.0.0.1:8888',
-        #     'url': '/',
-        #     'method': 'POST',
-        #     'secure': False,
-        #     'credentials': None,  # ('id', 'password'),
+        #     'host': '127.0.0.1',
+        #     'port': '8888',
         #     'filters': [
         #         'isAccessLog'
         #     ]
         # },
+        'AccessLogHttpHandler': {
+            'class': 'logging.handlers.HTTPHandler',
+            'level': 'INFO',
+            'formatter': 'AccessLogFileFormatter',
+            'host': '127.0.0.1:8888',
+            'url': '/',
+            'method': 'POST',
+            'secure': False,
+            'credentials': ('demo', 'demo'),
+            'filters': [
+                'isAccessLog'
+            ]
+        },
         # 'AccessLogSysLogHandler': {
         #     'class': 'logging.handlers.SysLogHandler',
         #     'address': ('127.0.0.1', 514),

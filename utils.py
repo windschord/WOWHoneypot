@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+import hashlib
 import json
 import re
+import time
 import urllib
 import urllib.request
 from datetime import datetime, timezone
 
 import geoip2.database
+import requests
 
 
 class RequestParser(object):
@@ -63,3 +66,52 @@ class EsHelper(object):
         with urllib.request.urlopen(req) as response:
             the_page = response.read().decode("utf-8")
             print('res body: {}'.format(the_page))
+
+
+class VirusTotalHelper(object):
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+    def report(self, url):
+        if len(url) == 0 and not url.startswith("http"):
+            return None
+
+        headers = {
+            "Accept-Encoding": "gzip, deflate",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko"
+        }
+
+        try:
+            memory_cache = urllib.request.urlopen(url).read()
+            filename = url[url.rindex("/") + 1:]
+        except Exception as e:
+            print("[ERROR] {0} - {1}".format(url, e))
+            return None
+        hash = hashlib.sha256(memory_cache).hexdigest()
+        if len(filename) == 0:
+            filename = hash
+        params = {'apikey': self.api_key, 'resource': hash}
+
+        response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
+        json_response = response.json()
+
+        print(
+            "scan result response_code:{0}, scan hash: {1}, url:{2}".format(json_response['response_code'], hash, url))
+
+        return json_response['response_code'], filename, memory_cache
+
+    def check(self, url):
+        response_code, filename, memory_cache = self.report( url)
+        time.sleep(15)
+
+        if response_code != 0:
+            return
+
+        print("submit: {0}".format(url))
+        params = {'apikey': self.api_key}
+        files = {'file': (filename, memory_cache)}
+        response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=params)
+        json_response = response.json()
+        print(
+            "response_code:{0}, permalink: {1}".format(json_response['response_code'], json_response['permalink']))
+        time.sleep(15)
