@@ -1,6 +1,6 @@
 .idea
 *.log
 /__pycache__/
-/server/venv/
+venv/
 *.mmdb
 log/

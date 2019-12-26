@@ -2,7 +2,6 @@
 import hashlib
 import json
 import re
-import time
 import urllib
 import urllib.request
 from datetime import datetime, timezone
@@ -31,7 +30,7 @@ class RequestParser(object):
             cmd = None
             url = r[0]
 
-        return {'@timestamp': asctime, 'client_ip': client_ip, 'command': cmd, 'url': url}
+        return {'@timestamp': asctime, 'client_ip': client_ip, 'command': cmd, 'target_url': url}
 
     def __access_log_base(self, message):
         message_ret = list(re.match('\[(.+)\] (.+) (.+) \"(.+) (.+) (.+)\" (\d+) (.+) (.+)$', message).groups())
@@ -68,65 +67,82 @@ class EsHelper(object):
         self.es_index = es_index
         self.es_type = es_type
 
-    def send(self, payload):
+    def send(self, payload, is_update=False, es_id=''):
         json_data = json.dumps(payload).encode("utf-8")
-        invoke_url = "http://{host}:{port}/{index}/{type}".format(host=self.es_host, port=self.es_port,
-                                                                  index=self.es_index, type=self.es_type)
+        if is_update:
+            invoke_url = "http://{host}:{port}/{index}/_update/{id}".format(host=self.es_host, port=self.es_port,
+                                                                            index=self.es_index, id=es_id)
+        else:
+            invoke_url = "http://{host}:{port}/{index}/{type}".format(host=self.es_host, port=self.es_port,
+                                                                      index=self.es_index, type=self.es_type)
 
         req = urllib.request.Request(invoke_url, data=json_data, method="POST",
                                      headers={'Content-type': 'application/json'})
 
-        print('URL: {} DATA: {}'.format(invoke_url, json_data))
+        # print('URL: {} DATA: {}'.format(invoke_url, json_data))
 
         with urllib.request.urlopen(req) as response:
             the_page = response.read().decode("utf-8")
-            print('res body: {}'.format(the_page))
+            # print('res body: {}'.format(the_page))
+
+    def search(self, payload):
+        json_data = json.dumps(payload).encode("utf-8")
+        invoke_url = "http://{host}:{port}/{index}/_search".format(host=self.es_host, port=self.es_port,
+                                                                   index=self.es_index, type=self.es_type)
+
+        req = urllib.request.Request(invoke_url, data=json_data, method="GET",
+                                     headers={'Content-type': 'application/json'})
+
+        # print('URL: {} DATA: {}'.format(invoke_url, json_data))
+
+        with urllib.request.urlopen(req) as response:
+            the_page = json.loads(response.read().decode("utf-8"))
+            # print('res body: {}'.format(the_page))
+            return [[r['_id'], r['_source']] for r in the_page['hits']['hits']]
 
 
 class VirusTotalHelper(object):
     def __init__(self, api_key):
         self.api_key = api_key
 
-    def report(self, url):
+    @staticmethod
+    def download_target(url):
         if len(url) == 0 and not url.startswith("http"):
-            return None
+            raise Exception('target url is wrong {}'.format(url))
 
-        headers = {
-            "Accept-Encoding": "gzip, deflate",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko"
-        }
+        memory_cache = urllib.request.urlopen(url).read()
+        target_hash = hashlib.sha256(memory_cache).hexdigest()
 
-        try:
-            memory_cache = urllib.request.urlopen(url).read()
-            filename = url[url.rindex("/") + 1:]
-        except Exception as e:
-            print("[ERROR] {0} - {1}".format(url, e))
-            return None
-        hash = hashlib.sha256(memory_cache).hexdigest()
-        if len(filename) == 0:
-            filename = hash
-        params = {'apikey': self.api_key, 'resource': hash}
+        file_name = url[url.rindex("/") + 1:]
+        file_name = target_hash if len(file_name) == 0 else file_name
 
-        response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
-        json_response = response.json()
+        return file_name, memory_cache, target_hash
 
-        print(
-            "scan result response_code:{0}, scan hash: {1}, url:{2}".format(json_response['response_code'], hash, url))
+    def report(self, target_hash):
+        print('search report {}'.format(target_hash))
 
-        return json_response['response_code'], filename, memory_cache
+        url = 'https://www.virustotal.com/vtapi/v2/file/report'
+        params = {'apikey': self.api_key, 'resource': target_hash}
+        res = requests.get(url, params=params)
+        res.raise_for_status()
+        return res.json().get('response_code'), res.json().get('permalink')
+
+    def scan(self, file_name, memory_cache):
+        print('scan file {}'.format(file_name))
+
+        url = 'https://www.virustotal.com/vtapi/v2/file/scan'
+        params = {'apikey': self.api_key}
+        files = {'file': (file_name, memory_cache)}
+
+        res = requests.post(url, files=files, params=params)
+        return res.json().get('response_code'), res.json().get('permalink')
 
     def check(self, url):
-        response_code, filename, memory_cache = self.report(url)
-        time.sleep(15)
+        file_name, memory_cache, target_hash = self.download_target(url)
+        response_code, permalink = self.report(target_hash)
 
-        if response_code != 0:
-            return
+        if response_code == 0:
+            response_code, permalink = self.report(file_name, memory_cache)
 
-        print("submit: {0}".format(url))
-        params = {'apikey': self.api_key}
-        files = {'file': (filename, memory_cache)}
-        response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=params)
-        json_response = response.json()
-        print(
-            "response_code:{0}, permalink: {1}".format(json_response['response_code'], json_response['permalink']))
-        time.sleep(15)
+        print("scan result response_code:{}, permalink:{}".format(response_code, permalink))
+        return file_name, target_hash, permalink
