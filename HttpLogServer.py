@@ -65,15 +65,23 @@ class PostHandler(BaseHTTPRequestHandler):
             message = form['message'].value
         if not message and 'msg' in form.keys():
             message = form['msg'].value
-        payload = RequestParser().http(message)
 
-        payload['pot_ip'] = pot_ip
+        if level_no == AccessLog:
+            payload = RequestParser().http_access_log(message)
+            payload['pot_ip'] = pot_ip
 
-        if HTTP_LOG_PROXY_GEOIP_PATH:
-            try:
-                payload['client_geoip'] = GeoIpHelper(HTTP_LOG_PROXY_GEOIP_PATH).get(payload['client_ip'])
-            except Exception as e:
-                print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
+            if HTTP_LOG_PROXY_GEOIP_PATH:
+                try:
+                    payload['client_geoip'] = GeoIpHelper(HTTP_LOG_PROXY_GEOIP_PATH).get(payload['client_ip'])
+                except Exception as e:
+                    print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
+        elif level_no == HuntLog:
+            print(message)
+            payload = RequestParser().http_hunt_log(form['asctime'].value,  message)
+            print(payload)
+        else:
+            print('Not match any support log level with {}'.format(level_no))
+            return
 
         EsHelper(HTTP_LOG_PROXY_ES_SERVER[level_no]['host'],
                  HTTP_LOG_PROXY_ES_SERVER[level_no]['port'],
@@ -100,7 +108,7 @@ if __name__ == '__main__':
     server.set_auth(HTTP_LOG_PROXY_SERVER_BASIC_AUTH_ID, HTTP_LOG_PROXY_SERVER_BASIC_AUTH_PASSWORD)
     if HTTP_LOG_PROXY_SERVER_KEY_FILE and HTTP_LOG_PROXY_SERVER_CERT_FILE:
         server.socket = ssl.wrap_socket(server.socket,
-                                       keyfile=HTTP_LOG_PROXY_SERVER_KEY_FILE,
-                                       certfile=HTTP_LOG_PROXY_SERVER_CERT_FILE, server_side=True)
+                                        keyfile=HTTP_LOG_PROXY_SERVER_KEY_FILE,
+                                        certfile=HTTP_LOG_PROXY_SERVER_CERT_FILE, server_side=True)
     print('Start server {}:{}'.format(HTTP_LOG_PROXY_SERVER_HOST, HTTP_LOG_PROXY_SERVER_PORT))
     server.serve_forever()
