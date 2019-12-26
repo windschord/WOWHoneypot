@@ -26,7 +26,7 @@ class SocketLogHandler(StreamRequestHandler):
             record = logging.makeLogRecord(obj)
             message = record.getMessage()
 
-            payload = RequestParser().tcp(message)
+            payload = RequestParser().tcp_access_log(message)
             payload['pot_ip'] = self.client_address[0]
 
             if TCP_LOG_PROXY_GEOIP_PATH:

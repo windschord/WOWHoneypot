@@ -18,7 +18,7 @@ WOWHONEYPOT_ART_PATH = './art/'
 WOWHONEYPOT_LOG_SEPARATOR = " "
 
 # Hunting
-WOWHONEYPOT_HUNT_ENABLE = True
+WOWHONEYPOT_HUNT_ENABLE = False
 
 # for GDPR(True: replace source ip address with 0.0.0.0)
 WOWHONEYPOT_IPMASKING = False
@@ -61,6 +61,10 @@ HTTP_LOG_PROXY_ES_SERVER = {
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 # default GeoIP path: None
 HTTP_LOG_PROXY_GEOIP_PATH = None
+
+HTTP_LOG_PROXY_HUNT_POLLING_SEC = 60
+
+HTTP_LOG_PROXY_VirusTotal_API_KEY = ''
 
 # --------------- TCP log proxy settings ---------------
 # default host: 0.0.0.0

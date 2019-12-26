@@ -19,6 +19,7 @@ conf = {
             'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
             'HuntLogFileHandler',
+            'HuntLogHttpHandler',
         ]
     },
     'handlers': {
@@ -88,6 +89,19 @@ conf = {
             'when': 'MIDNIGHT',
             'backupCount': 10,
             'encoding': 'utf-8',
+            'filters': [
+                'isHuntLog'
+            ]
+        },
+        'HuntLogHttpHandler': {
+            'class': 'logging.handlers.HTTPHandler',
+            'level': 'INFO',
+            'formatter': 'HuntLogFileFormatter',
+            'host': '127.0.0.1:8888',
+            'url': '/',
+            'method': 'POST',
+            'secure': False,
+            'credentials': ('demo', 'demo'),
             'filters': [
                 'isHuntLog'
             ]
