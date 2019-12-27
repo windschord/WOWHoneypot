@@ -19,7 +19,6 @@ import traceback
 import urllib.parse
 from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from multiprocessing.context import Process
 from threading import Thread
 from time import sleep
 
@@ -28,6 +27,7 @@ from utils.CustomLogFilter import HUNT_LOG
 from config import *
 from mrr_checker import parse_mrr
 from utils.DateTimeSupportJSONEncoder import DateTimeSupportJSONEncoder
+from utils.SlackWebHookNotify import SlackWebHookNotify
 
 from utils.SqliteHelper import SqliteHelper
 from utils.VirusTotalHelper import VirusTotalHelper
@@ -44,6 +44,8 @@ mrrids = []
 timeout = 3.0
 blacklist = {}
 
+pot_hostname = socket.gethostname()
+pot_ip_addr = socket.gethostbyname(pot_hostname)
 
 class WOWHoneypotHTTPServer(HTTPServer):
     def server_bind(self):
@@ -352,6 +354,7 @@ def is_active_syslog():
 def watch_hunting_log():
     vth = VirusTotalHelper(WOWHONEYPOT_VirusTotal_API_KEY)
     sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
+    slack = SlackWebHookNotify(WOWHONEYPOT_SLACK_WEBHOOK_URL)
     sleep(15)
 
     while True:
@@ -385,6 +388,8 @@ def watch_hunting_log():
                     sql.delete_one(db_id)
                 else:
                     sql.set_failed(db_id)
+                    if WOWHONEYPOT_SLACK_WEBHOOK_URL:
+                        slack.send(slack.build_vt_check_error(asctime, pot_ip_addr, hit))
             except Exception as e:
                 logging_system('Some Error {}'.format(e), True, False)
         logging_system("check new hunting: done", False, False)
