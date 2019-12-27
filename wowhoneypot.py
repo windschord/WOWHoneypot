@@ -45,7 +45,6 @@ timeout = 3.0
 blacklist = {}
 
 pot_hostname = socket.gethostname()
-pot_ip_addr = socket.gethostbyname(pot_hostname)
 
 class WOWHoneypotHTTPServer(HTTPServer):
     def server_bind(self):
@@ -389,7 +388,7 @@ def watch_hunting_log():
                 else:
                     sql.set_failed(db_id)
                     if WOWHONEYPOT_SLACK_WEBHOOK_URL:
-                        slack.send(slack.build_vt_check_error(asctime, pot_ip_addr, hit))
+                        slack.send(slack.build_vt_check_error(asctime, pot_hostname, hit))
             except Exception as e:
                 logging_system('Some Error {}'.format(e), True, False)
         logging_system("check new hunting: done", False, False)
