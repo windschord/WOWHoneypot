@@ -5,7 +5,9 @@ import struct
 from socketserver import StreamRequestHandler, ThreadingTCPServer
 
 from config import *
-from utils import RequestParser, EsHelper, GeoIpHelper
+from utils.EsHelper import EsHelper
+from utils.GeoIpHelper import GeoIpHelper
+from utils.RequestParser import RequestParser
 
 
 class SocketLogHandler(StreamRequestHandler):

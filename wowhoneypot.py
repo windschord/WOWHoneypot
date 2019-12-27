@@ -5,6 +5,8 @@
 # (c) 2017 @morihi_soc
 
 import base64
+import json
+import sqlite3
 from logging import config, getLogger
 import logging.handlers
 import os
@@ -17,18 +19,23 @@ import traceback
 import urllib.parse
 from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from multiprocessing.context import Process
+from threading import Thread
+from time import sleep
 
 import logging_conf
-from CustomLogFilter import AccessLog, HuntLog
+from utils.CustomLogFilter import HUNT_LOG
 from config import *
 from mrr_checker import parse_mrr
+from utils.DateTimeSupportJSONEncoder import DateTimeSupportJSONEncoder
+
+from utils.SqliteHelper import SqliteHelper
+from utils.VirusTotalHelper import VirusTotalHelper
 
 WOWHONEYPOT_VERSION = "1.2.1"
 
 JST = timezone(timedelta(hours=+9), 'JST')
 logger = getLogger(__name__)
-
-
 
 hunt_rules = []
 default_content = []
@@ -36,7 +43,6 @@ mrrdata = {}
 mrrids = []
 timeout = 3.0
 blacklist = {}
-
 
 
 class WOWHoneypotHTTPServer(HTTPServer):
@@ -205,9 +211,10 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
             # Hunting
             if WOWHONEYPOT_HUNT_ENABLE:
                 decoded_request_all = urllib.parse.unquote(request_all)
+                hits = []
                 for hunt_rule in hunt_rules:
-                    for hit in re.findall(hunt_rule, decoded_request_all):
-                        logging_hunt("{clientip} {hit}".format(clientip=clientip, hit=hit))
+                    hits.extend(re.findall(hunt_rule, decoded_request_all))
+                logging_hunt(client_ip=clientip, hits=hits)
 
         except socket.timeout as e:
             emsg = "{0}".format(e)
@@ -248,7 +255,7 @@ def format_access_log(time, client_ip, hostname, request_line, status_code, matc
 
 
 def logging_access(log):
-    logger.log(AccessLog, log)
+    logger.log(ACCESS_LOG, log)
 
     if is_active_syslog():
         logger.log(msg="{0} {1}".format(__file__, log), level=logging.INFO)
@@ -265,8 +272,10 @@ def logging_system(message, is_error, is_exit):
 
 
 # Hunt
-def logging_hunt(message):
-    logger.log(HuntLog, message)
+def logging_hunt(client_ip, hits):
+    SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB).put_all(client_ip, hits)
+    for hit in hits:
+        logger.log(HUNT_LOG, "{clientip} {hit}".format(clientip=client_ip, hit=hit))
 
 
 def get_time():
@@ -340,6 +349,49 @@ def is_active_syslog():
     return logging.handlers.SysLogHandler in [type(a) for a in logging.getLogger().manager.root.handlers]
 
 
+def watch_hunting_log():
+    vth = VirusTotalHelper(WOWHONEYPOT_VirusTotal_API_KEY)
+    sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
+    sleep(15)
+
+    while True:
+        logging_system("check new hunting", False, False)
+        if sql.pull_one():
+            db_id, asctime, client_ip, hit = sql.pull_one()
+
+            try:
+                r = hit.split(' ', 1)
+                if len(r) != 1:
+                    cmd = r[0]
+                    target_url = r[1]
+                else:
+                    cmd = None
+                    target_url = r[0]
+
+                file_name, target_hash, permalink = vth.check(target_url)
+
+                payload = {
+                    '@timestamp': asctime,
+                    'client_ip': client_ip,
+                    'row_data': hit,
+                    'command': cmd,
+                    'target_url': target_url,
+                    'target_file_name': file_name,
+                    'target_hash': target_hash,
+                    'vt_permalink': permalink,
+                }
+
+                logger.log(HUNT_RESULT_LOG, json.dumps(payload, cls=DateTimeSupportJSONEncoder))
+                if permalink:
+                    sql.delete_one(db_id)
+                else:
+                    sql.set_failed(db_id)
+            except Exception as e:
+                logging_system('Some Error {}'.format(e), True, False)
+        logging_system("check new hunting: done", False, False)
+        sleep(WOWHONEYPOT_VirusTotal_POLLING_SEC)
+
+
 if __name__ == '__main__':
     random.seed(datetime.now())
 
@@ -349,16 +401,27 @@ if __name__ == '__main__':
     except Exception:
         print(traceback.format_exc())
         sys.exit(1)
-    logging_system("WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, WOWHONEYPOT_HOST, WOWHONEYPOT_PORT, get_time()),
-                   False, False)
+    logging_system(
+        "WOWHoneypot(version {0}) start. {1}:{2} at {3}".format(WOWHONEYPOT_VERSION, WOWHONEYPOT_HOST, WOWHONEYPOT_PORT,
+                                                                get_time()),
+        False, False)
     logging_system("Hunting: {0}".format(WOWHONEYPOT_HUNT_ENABLE), False, False)
     logging_system("IP Masking: {0}".format(WOWHONEYPOT_IPMASKING), False, False)
     myServer = WOWHoneypotHTTPServer((WOWHONEYPOT_HOST, WOWHONEYPOT_PORT), WOWHoneypotRequestHandler)
     myServer.timeout = timeout
 
+    if WOWHONEYPOT_HUNT_ENABLE:
+        SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
+        if not len(WOWHONEYPOT_VirusTotal_API_KEY):
+            print('please set your api key to HTTP_LOG_PROXY_VirusTotal_API_KEY')
+            exit(1)
+        t = Thread(target=watch_hunting_log)
+        t.start()
     try:
         myServer.serve_forever()
     except KeyboardInterrupt:
         pass
 
     myServer.server_close()
+    if WOWHONEYPOT_HUNT_ENABLE:
+        t.join()
