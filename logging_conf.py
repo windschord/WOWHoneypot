@@ -3,11 +3,14 @@ conf = {
     'disable_existing_loggers': False,
     'filters': {
         'isAccessLog': {
-            '()': 'CustomLogFilter.AccessLogFilter'
+            '()': 'utils.CustomLogFilter.AccessLogFilter'
         },
         'isHuntLog': {
-            '()': 'CustomLogFilter.HuntLogFilter'
-        }
+            '()': 'utils.CustomLogFilter.HuntLogFilter'
+        },
+        'isHuntResultLog': {
+            '()': 'utils.CustomLogFilter.HuntResultLogFilter'
+        },
     },
     'root': {
         'level': 'DEBUG',
@@ -19,7 +22,8 @@ conf = {
             'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
             'HuntLogFileHandler',
-            'HuntLogHttpHandler',
+            'HuntResultLogFileHandler',
+            'HuntResultLogHttpHandler',
         ]
     },
     'handlers': {
@@ -93,23 +97,35 @@ conf = {
                 'isHuntLog'
             ]
         },
-        'HuntLogHttpHandler': {
-            'class': 'logging.handlers.HTTPHandler',
+        'HuntResultLogFileHandler': {
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'level': 'INFO',
             'formatter': 'HuntLogFileFormatter',
+            'filename': './log/hunt_result.log',
+            'when': 'MIDNIGHT',
+            'backupCount': 10,
+            'encoding': 'utf-8',
+            'filters': [
+                'isHuntResultLog'
+            ]
+        },
+        'HuntResultLogHttpHandler': {
+            'class': 'logging.handlers.HTTPHandler',
+            'level': 'INFO',
+            'formatter': 'HuntResultLogFileFormatter',
             'host': '127.0.0.1:8888',
             'url': '/',
             'method': 'POST',
             'secure': False,
             'credentials': ('demo', 'demo'),
             'filters': [
-                'isHuntLog'
+                'isHuntResultLog'
             ]
         },
     },
     'formatters': {
         'consoleFormatter': {
-            'format': '[%(levelname)-8s] %(funcName)s - %(message)s',
+            'format': '%(asctime)s [%(levelname)-8s] %(funcName)s - %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S%z'
         },
         'logFileFormatter': {
@@ -121,6 +137,10 @@ conf = {
             'datefmt': '%Y-%m-%d %H:%M:%S%z'
         },
         'HuntLogFileFormatter': {
+            'format': '[%(asctime)s] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S%z'
+        },
+        'HuntResultLogFileFormatter': {
             'format': '[%(asctime)s] %(message)s',
             'datefmt': '%Y-%m-%d %H:%M:%S%z'
         },

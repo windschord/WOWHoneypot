@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 import re
 from datetime import datetime, timezone
 
@@ -11,20 +12,8 @@ class RequestParser(object):
     def http_access_log(self, message):
         return self.__access_log_base(message)
 
-    def http_hunt_log(self, asctime, message):
-        asctime = datetime.strptime(asctime, "%Y-%m-%d %H:%M:%S%z"
-                                    ).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        client_ip, hit = message.split(' ', 1)
-        r = hit.split(' ', 1)
-        if len(r) != 1:
-            cmd = r[0]
-            url = r[1]
-        else:
-            cmd = None
-            url = r[0]
-
-        return {'@timestamp': asctime, 'client_ip': client_ip, 'command': cmd, 'target_url': url}
+    def http_hunt_result_log(self, message):
+        return json.loads(message)
 
     def __access_log_base(self, message):
         message_ret = list(re.match('\[(.+)\] (.+) (.+) \"(.+) (.+) (.+)\" (\d+) (.+) (.+)$', message).groups())

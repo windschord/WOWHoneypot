@@ -28,8 +28,6 @@ class VirusTotalHelper(object):
         return file_name, memory_cache, target_hash
 
     def report(self, target_hash):
-        print('search report {}'.format(target_hash))
-
         url = 'https://www.virustotal.com/vtapi/v2/file/report'
         params = {'apikey': self.api_key, 'resource': target_hash}
         res = requests.get(url, params=params)
@@ -37,8 +35,6 @@ class VirusTotalHelper(object):
         return res.json().get('response_code'), res.json().get('permalink')
 
     def scan(self, file_name, memory_cache):
-        print('scan file {}'.format(file_name))
-
         url = 'https://www.virustotal.com/vtapi/v2/file/scan'
         params = {'apikey': self.api_key}
         files = {'file': (file_name, memory_cache)}
@@ -56,5 +52,4 @@ class VirusTotalHelper(object):
         if response_code == 0:
             response_code, permalink = self.report(file_name, memory_cache)
 
-        print("scan result response_code:{}, permalink:{}".format(response_code, permalink))
         return file_name, target_hash, permalink

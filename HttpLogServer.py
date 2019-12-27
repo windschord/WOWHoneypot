@@ -79,8 +79,8 @@ class PostHandler(BaseHTTPRequestHandler):
                     print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
         elif level_no == HUNT_RESULT_LOG:
             print(message)
-            payload = RequestParser().http_hunt_log(form['asctime'].value, message)
-            print(payload)
+            payload = RequestParser().http_hunt_result_log(message)
+            payload['pot_ip'] = pot_ip
         else:
             print('Not match any support log level with {}'.format(level_no))
             return
