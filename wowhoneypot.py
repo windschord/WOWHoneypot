@@ -360,13 +360,12 @@ def watch_hunting_log():
             db_id, asctime, client_ip, hit = sql.pull_one()
 
             try:
-                r = hit.split(' ', 1)
-                if len(r) != 1:
-                    cmd = r[0]
-                    target_url = r[1]
+                reg = re.match('^(.+)(http.+)$', hit)
+                if reg:
+                    cmd, target_url = reg.groups()
                 else:
                     cmd = None
-                    target_url = r[0]
+                    target_url = hit
 
                 file_name, target_hash, permalink = vth.check(target_url)
 
