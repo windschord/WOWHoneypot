@@ -36,6 +36,9 @@ WOWHONEYPOT_VirusTotal_POLLING_SEC = 60
 # default VirusTotal api key:
 WOWHONEYPOT_VirusTotal_API_KEY = ''
 
+# default slack webhook url: None
+WOWHONEYPOT_SLACK_WEBHOOK_URL = None
+
 # --------------- HTTP log proxy settings ---------------
 # default host: 0.0.0.0
 HTTP_LOG_PROXY_SERVER_HOST = '0.0.0.0'
