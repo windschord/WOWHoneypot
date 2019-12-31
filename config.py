@@ -31,8 +31,8 @@ WOWHONEYPOT_HUNT_QUEUE_DB = 'hunting_queue.db'
 # default VirusTotal polling sec: 60 (1min)
 VIRUSTOTAL_POLLING_SEC = 60
 
-# default VirusTotal api key:
-WOWHONEYPOT_VirusTotal_API_KEY = None
+# default VirusTotal api key: None
+VIRUSTOTAL_API_KEY = None
 
 # default elastic search scheme: http
 ES_SERVER_SCHEME = 'http'
