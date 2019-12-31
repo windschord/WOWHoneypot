@@ -1,5 +1,6 @@
 certifi==2019.11.28
 chardet==3.0.4
+elasticsearch==7.1.0
 geoip2==3.0.0
 idna==2.8
 maxminddb==1.5.2
