@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 import hashlib
+import ipaddress
+import re
 import urllib
 import urllib.request
+from logging import getLogger
 
 import requests
+
+logger = getLogger()
 
 
 class VirusTotalHelper(object):
@@ -16,6 +21,14 @@ class VirusTotalHelper(object):
             raise Exception('target url is wrong {}'.format(url))
 
         file_name = url[url.rindex("/") + 1:]
+
+        # if target url is local address, end of search
+        res = re.match('^http(|s)://(\d+\.\d+.\d+.\d+)', url)
+        ip_address = res.group(2) if res else None
+        if ip_address and ipaddress.ip_address(ip_address).is_private:
+            logger.warning('request ip address is local address [{}]'.format(ip_address))
+            return file_name, None, None
+
         try:
             memory_cache = urllib.request.urlopen(url).read()
         except Exception as e:

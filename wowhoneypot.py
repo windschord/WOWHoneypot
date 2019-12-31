@@ -374,9 +374,9 @@ def is_active_syslog():
 
 
 def watch_hunting_log():
-    vth = VirusTotalHelper(WOWHONEYPOT_VirusTotal_API_KEY)
+    vth = VirusTotalHelper(VIRUSTOTAL_API_KEY)
     sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
-    slack = SlackWebHookNotify(WOWHONEYPOT_SLACK_WEBHOOK_URL)
+    slack = SlackWebHookNotify(SLACK_WEBHOOK_URL)
     es = EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_HUNT_LOG_INDEX)
     sleep(15)
 
@@ -412,12 +412,12 @@ def watch_hunting_log():
                     sql.delete_one(db_id)
                 else:
                     sql.set_failed(db_id)
-                    if WOWHONEYPOT_SLACK_WEBHOOK_URL:
+                    if SLACK_WEBHOOK_URL:
                         slack.send(slack.build_vt_check_error(asctime, pot_hostname, hit))
             except Exception as e:
                 logging_system('Some Error {}'.format(e), True, False)
         logging_system("check new hunting: done", False, False)
-        sleep(WOWHONEYPOT_VirusTotal_POLLING_SEC)
+        sleep(VIRUSTOTAL_POLLING_SEC)
 
 
 if __name__ == '__main__':
@@ -440,8 +440,8 @@ if __name__ == '__main__':
 
     if WOWHONEYPOT_HUNT_ENABLE:
         SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
-        if WOWHONEYPOT_VirusTotal_API_KEY:
-            print('please set your api key to HTTP_LOG_PROXY_VirusTotal_API_KEY')
+        if not VIRUSTOTAL_API_KEY:
+            print('please set your api key to VIRUSTOTAL_API_KEY')
             exit(1)
         t = Thread(target=watch_hunting_log)
         t.start()

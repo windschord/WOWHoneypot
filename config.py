@@ -29,13 +29,13 @@ WOWHONEYPOT_HUNT_QUEUE_DB = 'hunting_queue.db'
 WOWHONEYPOT_IPMASKING = False
 
 # default VirusTotal polling sec: 60 (1min)
-WOWHONEYPOT_VirusTotal_POLLING_SEC = 60
+VIRUSTOTAL_POLLING_SEC = 60
 
 # default VirusTotal api key:
 WOWHONEYPOT_VirusTotal_API_KEY = None
 
 # default slack webhook url: None
-WOWHONEYPOT_SLACK_WEBHOOK_URL = None
+SLACK_WEBHOOK_URL = None
 
 # default elastic search scheme: http
 ES_SERVER_SCHEME = 'http'
