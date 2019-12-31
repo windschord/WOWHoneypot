@@ -6,7 +6,6 @@
 
 import base64
 import json
-import sqlite3
 from logging import config, getLogger
 import logging.handlers
 import os
@@ -23,10 +22,12 @@ from threading import Thread
 from time import sleep
 
 import logging_conf
-from utils.CustomLogFilter import HUNT_LOG
+from utils.CustomLogFilter import HUNT_LOG, HUNT_RESULT_LOG, ACCESS_LOG
 from config import *
 from mrr_checker import parse_mrr
 from utils.DateTimeSupportJSONEncoder import DateTimeSupportJSONEncoder
+from utils.EsHelper import EsHelper
+from utils.GeoIpHelper import GeoIpHelper
 from utils.SlackWebHookNotify import SlackWebHookNotify
 
 from utils.SqliteHelper import SqliteHelper
@@ -45,6 +46,7 @@ timeout = 3.0
 blacklist = {}
 
 pot_hostname = socket.gethostname()
+
 
 class WOWHoneypotHTTPServer(HTTPServer):
     def server_bind(self):
@@ -199,16 +201,14 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
 
             request_all = self.requestline + "\n" + str(self.headers) + body
             logging_access(
-                format_access_log(
-                    time=get_time(),
-                    client_ip=clientip,
-                    hostname=hostname,
-                    request_line=self.requestline,
-                    status_code=status,
-                    match_result=match,
-                    request_all=request_all,
-                    separator=WOWHONEYPOT_LOG_SEPARATOR
-                ))
+                time=datetime.utcnow(),
+                client_ip=clientip,
+                hostname=hostname,
+                request_line=self.requestline,
+                status_code=status,
+                match_result=match,
+                request_all=base64.b64encode(request_all.encode('utf-8')).decode('utf-8'),
+            )
             # Hunting
             if WOWHONEYPOT_HUNT_ENABLE:
                 decoded_request_all = urllib.parse.unquote(request_all)
@@ -243,7 +243,7 @@ class WOWHoneypotRequestHandler(BaseHTTPRequestHandler):
 
 
 def format_access_log(time, client_ip, hostname, request_line, status_code, match_result, request_all, separator):
-    return "[{time}]{s}{clientip}{s}{hostname}{s}\"{requestline}\"{s}{status_code}{s}{match_result}{s}{requestall}".format(
+    return "[{time:%Y-%m-%d %H:%M:%S%z}]{s}{clientip}{s}{hostname}{s}\"{requestline}\"{s}{status_code}{s}{match_result}{s}{requestall}".format(
         time=time,
         clientip=client_ip,
         hostname=hostname,
@@ -255,11 +255,34 @@ def format_access_log(time, client_ip, hostname, request_line, status_code, matc
     )
 
 
-def logging_access(log):
+def logging_access(time, client_ip, hostname, request_line, status_code, match_result, request_all):
+    log = format_access_log(time, client_ip, hostname, request_line, status_code, match_result, request_all,
+                            WOWHONEYPOT_LOG_SEPARATOR)
     logger.log(ACCESS_LOG, log)
 
     if is_active_syslog():
         logger.log(msg="{0} {1}".format(__file__, log), level=logging.INFO)
+
+    tmp = request_line.split()
+    payload = {'@timestamp': time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+               'client_ip': client_ip,
+               'client_geoip': None,
+               'hostname': hostname,
+               'method': tmp[0],
+               'path': tmp[1],
+               'version': tmp[2],
+               'status_code': status_code,
+               'match_result': match_result,
+               'request_all': request_all
+               }
+
+    if GEOIP_PATH:
+        try:
+            payload['client_geoip'] = GeoIpHelper(GEOIP_PATH).get(payload['client_ip'])
+        except Exception as e:
+            print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
+
+    EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_ACCESS_LOG_INDEX).send(payload)
 
 
 def logging_system(message, is_error, is_exit):
@@ -354,13 +377,14 @@ def watch_hunting_log():
     vth = VirusTotalHelper(WOWHONEYPOT_VirusTotal_API_KEY)
     sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
     slack = SlackWebHookNotify(WOWHONEYPOT_SLACK_WEBHOOK_URL)
+    es = EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_HUNT_LOG_INDEX)
     sleep(15)
 
     while True:
         logging_system("check new hunting", False, False)
         if sql.pull_one():
             db_id, asctime, client_ip, hit = sql.pull_one()
-
+            logging_system("check hunting target [{}]".format(db_id), False, False)
             try:
                 reg = re.match('^(.+)(http.+)$', hit)
                 if reg:
@@ -372,7 +396,7 @@ def watch_hunting_log():
                 file_name, target_hash, permalink = vth.check(target_url)
 
                 payload = {
-                    '@timestamp': asctime,
+                    '@timestamp': asctime.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     'client_ip': client_ip,
                     'row_data': hit,
                     'command': cmd,
@@ -383,6 +407,7 @@ def watch_hunting_log():
                 }
 
                 logger.log(HUNT_RESULT_LOG, json.dumps(payload, cls=DateTimeSupportJSONEncoder))
+                es.send(payload)
                 if permalink:
                     sql.delete_one(db_id)
                 else:
@@ -415,7 +440,7 @@ if __name__ == '__main__':
 
     if WOWHONEYPOT_HUNT_ENABLE:
         SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
-        if not len(WOWHONEYPOT_VirusTotal_API_KEY):
+        if WOWHONEYPOT_VirusTotal_API_KEY:
             print('please set your api key to HTTP_LOG_PROXY_VirusTotal_API_KEY')
             exit(1)
         t = Thread(target=watch_hunting_log)
