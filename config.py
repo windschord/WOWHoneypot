@@ -17,6 +17,9 @@ WOWHONEYPOT_ART_PATH = './art/'
 # default separator: " "
 WOWHONEYPOT_LOG_SEPARATOR = " "
 
+# for GDPR(True: replace source ip address with 0.0.0.0)
+WOWHONEYPOT_IPMASKING = False
+
 # Hunting
 # default: False
 WOWHONEYPOT_HUNT_ENABLE = False
@@ -25,17 +28,11 @@ WOWHONEYPOT_HUNT_ENABLE = False
 # default: hunting_queue.db
 WOWHONEYPOT_HUNT_QUEUE_DB = 'hunting_queue.db'
 
-# for GDPR(True: replace source ip address with 0.0.0.0)
-WOWHONEYPOT_IPMASKING = False
-
 # default VirusTotal polling sec: 60 (1min)
 VIRUSTOTAL_POLLING_SEC = 60
 
 # default VirusTotal api key:
 WOWHONEYPOT_VirusTotal_API_KEY = None
-
-# default slack webhook url: None
-SLACK_WEBHOOK_URL = None
 
 # default elastic search scheme: http
 ES_SERVER_SCHEME = 'http'
@@ -59,3 +56,6 @@ ES_SERVER_HUNT_LOG_INDEX = 'wowhoneypot_hunt'
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 # default GeoIP path: None
 GEOIP_PATH = None
+
+# default slack webhook url: None
+SLACK_WEBHOOK_URL = None
