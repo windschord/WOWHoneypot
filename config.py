@@ -9,6 +9,8 @@ WOWHONEYPOT_PORT = 8080
 # default server header: Apache
 WOWHONEYPOT_SERVER_HEADER = 'Apache'
 
+WOWHONEYPOT_POT_IP = ''
+
 # art directory path
 # default path: ./art/
 WOWHONEYPOT_ART_PATH = './art/'

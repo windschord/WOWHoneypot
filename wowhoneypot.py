@@ -273,7 +273,8 @@ def logging_access(time, client_ip, hostname, request_line, status_code, match_r
                'version': tmp[2],
                'status_code': status_code,
                'match_result': match_result,
-               'request_all': request_all
+               'request_all': request_all,
+               'pot_ip': WOWHONEYPOT_POT_IP
                }
 
     if GEOIP_PATH:
@@ -282,7 +283,8 @@ def logging_access(time, client_ip, hostname, request_line, status_code, match_r
         except Exception as e:
             print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
 
-    EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_ACCESS_LOG_INDEX).send(payload)
+    EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_ACCESS_LOG_INDEX).send(
+        payload)
 
 
 def logging_system(message, is_error, is_exit):
@@ -404,6 +406,7 @@ def watch_hunting_log():
                     'target_file_name': file_name,
                     'target_hash': target_hash,
                     'vt_permalink': permalink,
+                    'pot_ip': WOWHONEYPOT_POT_IP
                 }
 
                 logger.log(HUNT_RESULT_LOG, json.dumps(payload, cls=DateTimeSupportJSONEncoder))
