@@ -18,12 +18,9 @@ conf = {
             'consoleHandler',
             'logFileHandler',
             'AccessLogFileHandler',
-            # 'AccessLogTCPHandler',
-            'AccessLogHttpHandler',
             # 'AccessLogSysLogHandler',
             'HuntLogFileHandler',
             'HuntResultLogFileHandler',
-            'HuntResultLogHttpHandler',
         ]
     },
     'handlers': {
@@ -50,29 +47,6 @@ conf = {
             'when': 'MIDNIGHT',
             'backupCount': 10,
             'encoding': 'utf-8',
-            'filters': [
-                'isAccessLog'
-            ]
-        },
-        # 'AccessLogTCPHandler': {
-        #     'class': 'logging.handlers.SocketHandler',
-        #     'level': 'INFO',
-        #     'formatter': 'AccessLogFileFormatter',
-        #     'host': '127.0.0.1',
-        #     'port': '8888',
-        #     'filters': [
-        #         'isAccessLog'
-        #     ]
-        # },
-        'AccessLogHttpHandler': {
-            'class': 'logging.handlers.HTTPHandler',
-            'level': 'INFO',
-            'formatter': 'AccessLogFileFormatter',
-            'host': '127.0.0.1:8888',
-            'url': '/',
-            'method': 'POST',
-            'secure': False,
-            'credentials': ('demo', 'demo'),
             'filters': [
                 'isAccessLog'
             ]
@@ -105,19 +79,6 @@ conf = {
             'when': 'MIDNIGHT',
             'backupCount': 10,
             'encoding': 'utf-8',
-            'filters': [
-                'isHuntResultLog'
-            ]
-        },
-        'HuntResultLogHttpHandler': {
-            'class': 'logging.handlers.HTTPHandler',
-            'level': 'INFO',
-            'formatter': 'HuntResultLogFileFormatter',
-            'host': '127.0.0.1:8888',
-            'url': '/',
-            'method': 'POST',
-            'secure': False,
-            'credentials': ('demo', 'demo'),
             'filters': [
                 'isHuntResultLog'
             ]
