@@ -283,8 +283,9 @@ def logging_access(time, client_ip, hostname, request_line, status_code, match_r
         except Exception as e:
             print('Cannot get GeoIP {} {}'.format(payload['client_ip'], e))
 
-    EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_ACCESS_LOG_INDEX).send(
-        payload)
+    if ES_SERVER_HOSTS:
+        EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_ACCESS_LOG_INDEX).send(
+            payload)
 
 
 def logging_system(message, is_error, is_exit):
@@ -379,7 +380,8 @@ def watch_hunting_log():
     vth = VirusTotalHelper(VIRUSTOTAL_API_KEY)
     sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
     slack = SlackWebHookNotify(SLACK_WEBHOOK_URL)
-    es = EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_HUNT_LOG_INDEX)
+    if ES_SERVER_HOSTS:
+        es = EsHelper(ES_SERVER_SCHEME, ES_SERVER_HOSTS, ES_SERVER_PORT, ES_SERVER_AUTH, ES_SERVER_HUNT_LOG_INDEX)
     sleep(15)
 
     while True:
