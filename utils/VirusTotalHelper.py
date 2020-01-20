@@ -20,6 +20,7 @@ class VirusTotalHelper(object):
         if len(url) == 0 and not url.startswith("http"):
             raise Exception('target url is wrong {}'.format(url))
 
+        url = url.replace('\\', '')
         file_name = url[url.rindex("/") + 1:]
 
         # if target url is local address, end of search

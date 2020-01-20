@@ -377,7 +377,8 @@ def is_active_syslog():
 
 
 def watch_hunting_log():
-    vth = VirusTotalHelper(VIRUSTOTAL_API_KEY)
+    if VIRUSTOTAL_API_KEY:
+        vth = VirusTotalHelper(VIRUSTOTAL_API_KEY)
     sql = SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
     slack = SlackWebHookNotify(SLACK_WEBHOOK_URL)
     if ES_SERVER_HOSTS:
@@ -397,7 +398,12 @@ def watch_hunting_log():
                     cmd = None
                     target_url = hit
 
-                file_name, target_hash, permalink = vth.check(target_url)
+                if VIRUSTOTAL_API_KEY:
+                    file_name, target_hash, permalink = vth.check(target_url)
+                else:
+                    file_name = None
+                    target_hash = None
+                    permalink = None
 
                 payload = {
                     '@timestamp': asctime.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -412,7 +418,9 @@ def watch_hunting_log():
                 }
 
                 logger.log(HUNT_RESULT_LOG, json.dumps(payload, cls=DateTimeSupportJSONEncoder))
-                es.send(payload)
+                if ES_SERVER_HOSTS:
+                    es.send(payload)
+
                 if permalink:
                     sql.delete_one(db_id)
                 else:
@@ -446,8 +454,8 @@ if __name__ == '__main__':
     if WOWHONEYPOT_HUNT_ENABLE:
         SqliteHelper(WOWHONEYPOT_HUNT_QUEUE_DB)
         if not VIRUSTOTAL_API_KEY:
-            print('please set your api key to VIRUSTOTAL_API_KEY')
-            exit(1)
+            logging_system('Not set your api key at VIRUSTOTAL_API_KEY. if you want use virustotal api, please set it.',
+                           False, False)
         t = Thread(target=watch_hunting_log)
         t.start()
     try:
