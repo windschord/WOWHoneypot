@@ -23,7 +23,7 @@ WOWHONEYPOT_ART_PATH = os.environ.get('WOWHONEYPOT_ART_PATH', './art/')
 WOWHONEYPOT_LOG_SEPARATOR = os.environ.get('WOWHONEYPOT_LOG_SEPARATOR', ' ')
 
 # for GDPR(True: replace source ip address with 0.0.0.0)
-WOWHONEYPOT_IPMASKING = ast.literal_eval(os.environ.get('WOWHONEYPOT_LOG_SEPARATOR', 'False'))
+WOWHONEYPOT_IPMASKING = ast.literal_eval(os.environ.get('WOWHONEYPOT_IPMASKING', 'False'))
 
 # Hunting
 # default: False
