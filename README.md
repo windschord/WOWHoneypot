@@ -37,12 +37,7 @@ $ sudo ufw reload
 $ docker run -p 8080:8080 windschord/wowhoneypot wowhoneypot.py
 ```
 
-※TCPサーバ経由でelastic searchにログを転送する場合は以下を受信先サーバで起動する。
-```
-$ docker run -p 8888:8888 windschord/wowhoneypot TCPLogServer.py
-```
-
-## 構築方法2 (Ubuntu 16.04 Server 64bit)
+## 構築方法2 (Ubuntu 18.04.4 LTS)
 ```
 $ sudo ufw default DENY
 $ sudo ufw allow 80/tcp
