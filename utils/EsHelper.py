@@ -24,7 +24,7 @@ class EsHelper(object):
         )
         self.es_index = es_index
         self.es_type = es_type
-        self.es_failed_store_dir ='es_failed'
+        self.es_failed_store_dir = os.path.join('es_failed', self.es_index)
         os.makedirs(self.es_failed_store_dir, exist_ok=True)
 
     def send(self, payload, es_id=None):
