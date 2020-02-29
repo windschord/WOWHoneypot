@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # Welcome to Omotenashi Web Honeypot(WOWHoneypot)
-# author @morihi_soc
-# (c) 2017 @morihi_soc
 import base64
 import json
 import logging.handlers
@@ -31,7 +29,7 @@ from utils.SlackWebHookNotify import SlackWebHookNotify
 from utils.SqliteHelper import SqliteHelper
 from utils.VirusTotalHelper import VirusTotalHelper
 
-WOWHONEYPOT_VERSION = "1.2.1"
+WOWHONEYPOT_VERSION = "20200229"
 
 JST = timezone(timedelta(hours=+9), 'JST')
 logger = getLogger(__name__)
