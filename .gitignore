@@ -5,3 +5,4 @@ venv/
 *.mmdb
 *.db
 log/
+es_failed/
