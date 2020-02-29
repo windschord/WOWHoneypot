@@ -99,7 +99,7 @@ curl -XPUT 'localhost:9200/wowhoneypot'
 
 https://dev.maxmind.com/geoip/geoip2/geolite2/
 
-config.txtの`geoipdbpath`￿に`GeoLite2-City.mmdb`のパスを設定する。
+config.txtの`geoipdbpath`に`GeoLite2-City.mmdb`のパスを設定する。
 
 pip3 install geoip2
 
@@ -115,11 +115,6 @@ pip3 install geoip2
 - 実行前に、VirusTotal API Key を取得して、chase-url.py に記載してください。
 - 1日や1時間に1回程度実行するといいと思います。ただし VirusTotal API の上限に引っかからないように注意してください。
 - サブミットするファイルは、**メモリへキャッシュとして保存しますが、ディスクには保存しません。**
-
-## 動作テスト済み環境
-- macOS High Sierra & Python 3.6.3
-- Ubuntu 16.04.3 Server 64bit & Python 3.5.2
-- Windows 7 SP1 & Python 3.6.3
 
 ## Licence
 
