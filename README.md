@@ -121,24 +121,6 @@ pip3 install geoip2
 - Ubuntu 16.04.3 Server 64bit & Python 3.5.2
 - Windows 7 SP1 & Python 3.6.3
 
-## リリースノート
-- 2018年5月19日 WOWHoneypot Version 1.2 公開
-  - 新機能：GDPR のため、IP アドレスをマスクして保存する設定項目を追加しました(デフォルト:無効)。
-  - 新機能：アクセスログを保存するときの区切り文字を設定ファイルで指定できるようにしました(デフォルト:半角スペース1個)。
-  - 改善：URL のパースで、メソッドが大文字アルファベットから始まるリクエストのみ受け入れるようにしました。
-  - 改善：URL に"(ダブルクォート)が含まれていた場合は、%22に変換するようにしました。
-  - 改善：huntrules.txt にルールを追加しました。
-- 2018年5月5日 WOWHoneypot Version 1.1 公開
-  - 新機能：ハンティング機能を追加しました。
-  - 改善：セッションタイムアウトの処理を見直しました。
-  - 改善：URL にスペースが入っている場合、エラーとなっていたため、mrr 処理前に%20に変換するようにしました。
-- 2017年11月25日 WOWHoneypot Version 1.0 公開
-
 ## Licence
 
 [BSD License](https://github.com/morihisa/WOWHoneypot/blob/master/LICENSE)
-
-## Author
-
-- [morihi-soc.net](http://www.morihi-soc.net/)
-- [@morihi_soc](https://twitter.com/morihi_soc)
