@@ -43,10 +43,10 @@ VIRUSTOTAL_API_KEY = os.environ.get('WOWHONEYPOT_HUNT_QUEUE_DB', None)
 ES_SERVER_SCHEME = os.environ.get('ES_SERVER_SCHEME', 'http')
 
 # default elastic search hosts: http
-ES_SERVER_HOSTS = os.environ.get('ES_SERVER_SCHEME', '').split(',') if os.environ.get('ES_SERVER_SCHEME') else None
+ES_SERVER_HOSTS = os.environ.get('ES_SERVER_HOSTS', '').split(',') if os.environ.get('ES_SERVER_HOSTS') else None
 
 # default elastic search port: 9200
-ES_SERVER_PORT = int( os.environ.get('ES_SERVER_SCHEME', '9200'))
+ES_SERVER_PORT = int(os.environ.get('ES_SERVER_PORT', '9200'))
 
 # default elastic search auth: None
 # if you use auth, replace None to ('user', 'password')
@@ -60,7 +60,7 @@ ES_SERVER_HUNT_LOG_INDEX = os.environ.get('ES_SERVER_HUNT_LOG_INDEX', 'wowhoneyp
 
 # if enable GeoIP, set path to GeoLite2-City.mmdb
 # default GeoIP path: None
-GEOIP_PATH =  os.environ.get('GEOIP_PATH', None)
+GEOIP_PATH = os.environ.get('GEOIP_PATH', None)
 
 # default slack webhook url: None
-SLACK_WEBHOOK_URL =  os.environ.get('SLACK_WEBHOOK_URL', None)
+SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', None)
