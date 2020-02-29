@@ -3,10 +3,8 @@
 # Welcome to Omotenashi Web Honeypot(WOWHoneypot)
 # author @morihi_soc
 # (c) 2017 @morihi_soc
-
 import base64
 import json
-from logging import config, getLogger
 import logging.handlers
 import os
 import random
@@ -17,19 +15,19 @@ import sys
 import traceback
 import urllib.parse
 from datetime import datetime, timedelta, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
+from logging import config, getLogger
 from threading import Thread
 from time import sleep
 
 import logging_conf
-from utils.CustomLogFilter import HUNT_LOG, HUNT_RESULT_LOG, ACCESS_LOG
 from config import *
 from mrr_checker import parse_mrr
+from utils.CustomLogFilter import HUNT_LOG, HUNT_RESULT_LOG, ACCESS_LOG
 from utils.DateTimeSupportJSONEncoder import DateTimeSupportJSONEncoder
 from utils.EsHelper import EsHelper
 from utils.GeoIpHelper import GeoIpHelper
 from utils.SlackWebHookNotify import SlackWebHookNotify
-
 from utils.SqliteHelper import SqliteHelper
 from utils.VirusTotalHelper import VirusTotalHelper
 
@@ -48,7 +46,7 @@ blacklist = {}
 pot_hostname = socket.gethostname()
 
 
-class WOWHoneypotHTTPServer(HTTPServer):
+class WOWHoneypotHTTPServer(ThreadingHTTPServer):
     def server_bind(self):
         HTTPServer.server_bind(self)
         self.socket.settimeout(timeout)
