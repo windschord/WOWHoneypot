@@ -1,12 +1,12 @@
-# WOWHoneypot: 初心者向け! 攻撃者をおもてなしする Web ハニーポット
+# WOWHoneypot2:
 
-Welcome to Omotenashi Web Honeypot(WOWHoneypot)は、簡単に構築可能で、シンプルな機能で動作を把握しやすくした、サーバ側低対話型の入門用 Web ハニーポットです。
-ルールベースのマッチ&レスポンス機能により、攻撃者に気持ちよく攻撃してもらい、得られるログの幅を広げることができます。
+This is project still workin on.
 
-送信元からの HTTP リクエストをそのまま保存するので、後からじっくりゆっくりログ分析をすることが可能です。
+[WOWHoneypot](https://github.com/morihisa/WOWHoneypot) に以下の機能を付加・変更したHoneypotです。
 
-ハニーポッター技術交流会で発表したときの資料はこちらで公開しています。
-[初心者向けハニーポット WOWHoneypot の紹介](https://speakerdeck.com/morihi_soc/chu-xin-zhe-xiang-kehanihotuto-wowhoneypot-falseshao-jie)
+- Pythonロギングによりログのカスタマイズが可能
+- ElasticsearchにアクセスログとHuntingログの送信が可能
+- 設定ファイルをPython形式に変更
 
 ## 特徴
 - 構築が簡単
