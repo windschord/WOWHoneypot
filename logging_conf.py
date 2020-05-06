@@ -12,6 +12,16 @@ conf = {
             '()': 'utils.CustomLogFilter.HuntResultLogFilter'
         },
     },
+    # 'loggers': {
+    #   'elasticsearch': {
+    #       'level': 'INFO',
+    #       'handlers': [
+    #           'consoleHandler',
+    #           'logFileHandler',
+    #       ],
+    #       "propagate": "no",
+    #   }
+    # },
     'root': {
         'level': 'DEBUG',
         'handlers': [
