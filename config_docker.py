@@ -37,7 +37,7 @@ WOWHONEYPOT_HUNT_QUEUE_DB = os.environ.get('WOWHONEYPOT_HUNT_QUEUE_DB', 'hunting
 VIRUSTOTAL_POLLING_SEC = int(os.environ.get('VIRUSTOTAL_POLLING_SEC', '60'))
 
 # default VirusTotal api key: None
-VIRUSTOTAL_API_KEY = os.environ.get('WOWHONEYPOT_HUNT_QUEUE_DB', None)
+VIRUSTOTAL_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY', None)
 
 # default elastic search scheme: http
 ES_SERVER_SCHEME = os.environ.get('ES_SERVER_SCHEME', 'http')
